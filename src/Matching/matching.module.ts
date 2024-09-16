@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from "../Profil/schemas/profil.schema";
+import { User, UserSchema } from "../Profil/User/schemas/user.schema";
 import { InteractionService } from "./interaction.service";
-import { Conversation, ConversationSchema } from "../Conversation/schemas/conversation.schema";
-import { Message, MessageSchema } from "../Conversation/schemas/message.schemas";
+
 import { Interaction, InteractionSchema } from "./schemas/Interaction.schemas";
 import { InteractionController } from "./controllers/interaction.controller";
 import { Match, MatchSchema } from "./schemas/match.schemas";
@@ -13,6 +12,8 @@ import { MatchController } from "./controllers/match.controller";
 import { MatchPreference, MatchPreferenceSchema } from "./schemas/matchPreference.schemas";
 import { MatchPreferenceController } from "./controllers/matchPreference.controller";
 import { MatchPreferenceService } from "./matchPreference.service";
+import { Conversation, ConversationSchema } from "./Conversation/schemas/conversation.schema";
+import { Message, MessageSchema } from "./Conversation/schemas/message.schemas";
 
 
 @Module({

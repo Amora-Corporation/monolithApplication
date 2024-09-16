@@ -1,28 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ProfilController } from './user.controller';
-import { ProfilService } from './user.service';
+
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './User/schemas/user.schema';
-import { ClientsModule, Transport } from "@nestjs/microservices";
+import { User, UserSchema } from "./schemas/user.schema";
+import { UserController } from "./user.controller";
+import { UserService } from "./user.service";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: "TOKEN_SERVICE",
-        transport: Transport.RMQ,
-        options: {
-          urls: ["amqp://localhost:5672"],
-          queue: "userQueue",
-          queueOptions: {
-            durable: false
-          }
-        }
-      }
-    ]),
+    JwtModule.register({}),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  controllers: [ProfilController],
-  providers: [ProfilService],
+  controllers: [UserController],
+  providers: [UserService],
+  exports: [UserService]
 })
-export class ProfilModule {}
+export class UserModule {}

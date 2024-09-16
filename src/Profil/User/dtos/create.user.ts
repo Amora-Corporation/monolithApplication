@@ -14,8 +14,15 @@ import {
   Max,
   IsObject,
 } from 'class-validator';
+import { Types } from "mongoose";
 
 export class CreateUserDto {
+
+  @ApiProperty({ example: '', description: "ID" })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  _id: Types.ObjectId;
 
   @ApiProperty({ example: 'John', description: "Le prénom de l'utilisateur" })
   @IsString()
@@ -52,6 +59,13 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
+  // @ApiProperty({
+  //   example: 'password123',
+  //   description: "Le mot de passe de l'utilisateur",
+  // })
+  // @IsString()
+  // @MinLength(8)
+  // password: string;
 
   @ApiPropertyOptional({
     example: 75,

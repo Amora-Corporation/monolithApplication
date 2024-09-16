@@ -5,26 +5,33 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+  Query, UseGuards
 } from "@nestjs/common";
-import { ProfilService } from "./user.service";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
   ApiBody,
-  ApiQuery,
+  ApiQuery, ApiBearerAuth
 } from "@nestjs/swagger";
-import { CreateUserDto } from "./User/dtos/create.user";
-import { User } from "./User/schemas/user.schema";
-import { MessagePattern, Payload } from "@nestjs/microservices";
 
-@ApiTags("Profils")
-@Controller("profils")
-export class ProfilController {
-  constructor(private readonly profilService: ProfilService) {}
 
+import { User } from "./schemas/user.schema";
+import { CreateUserDto } from "./dtos/create.user";
+import { UserService } from "./user.service";
+import { AuthGuard } from "../../auth/guards/auth.guard";
+import { Admin } from "../../auth/decorators/isAdmin.decorator";
+import { Public } from "../../auth/decorators/public.decorator";
+
+@ApiTags("User")
+@Controller("User")
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Public()
   @Post()
   @ApiOperation({ summary: "Créer un nouveau profil utilisateur" })
   @ApiResponse({
@@ -34,28 +41,12 @@ export class ProfilController {
   })
   @ApiBody({ type: CreateUserDto })
   async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.profilService.create(createUserDto);
-  }
-
-
-  @MessagePattern('CreateUser')
-  async createUserFromMessage(@Payload() data: CreateUserDto): Promise<any> {
-
-    try {
-      const user = await this.profilService.create(data);
-      return { success: true, user };
-    } catch (error) {
-      console.log(error)
-      return { success: false, error: error.message };
-    }
-  }
-
-  async hello(data:string) {
-    console.log(data);
+    return this.userService.create(createUserDto);
   }
 
 
 
+  @Admin()
   @Get()
   @ApiOperation({ summary: "Obtenir tous les profils utilisateurs" })
   @ApiResponse({
@@ -64,10 +55,13 @@ export class ProfilController {
     type: [User],
   })
   async findAll(): Promise<User[]> {
-    return this.profilService.findAll();
+    return this.userService.findAll();
   }
 
+
+
   @Get(":id")
+
   @ApiOperation({ summary: "Obtenir un profil utilisateur par ID" })
   @ApiResponse({
     status: 200,
@@ -77,7 +71,7 @@ export class ProfilController {
   @ApiResponse({ status: 404, description: "Profil non trouvé." })
   @ApiParam({ name: "id", description: "ID du profil utilisateur" })
   async findOne(@Param("id") id: string): Promise<User> {
-    return this.profilService.findOne(id);
+    return this.userService.findOne(id);
   }
 
   //   @Put(':id')
@@ -90,6 +84,7 @@ export class ProfilController {
   //     return this.profilService.update(id, updateUserDto);
   //   }
 
+
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer un profil utilisateur" })
   @ApiResponse({
@@ -99,7 +94,7 @@ export class ProfilController {
   @ApiResponse({ status: 404, description: "Profil non trouvé." })
   @ApiParam({ name: "id", description: "ID du profil utilisateur" })
   async remove(@Param("id") id: string): Promise<User> {
-    return this.profilService.remove(id);
+    return this.userService.remove(id);
   }
 
   @Get("search")
@@ -111,6 +106,8 @@ export class ProfilController {
   })
   @ApiQuery({ name: "query", description: "Terme de recherche" })
   async search(@Query("query") query: string): Promise<User[]> {
-    return this.profilService.search(query);
+    return this.userService.search(query);
   }
+
+
 }

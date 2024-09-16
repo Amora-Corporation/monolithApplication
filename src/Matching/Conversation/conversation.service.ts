@@ -7,7 +7,8 @@ import {
 } from './schemas/conversation.schema';
 import { Model, Types } from "mongoose";
 import { CreateConversationDto } from './dtos/create.conversation';
-import { User, UserDocument } from "../Profil/schemas/profil.schema";
+import { User, UserDocument } from "../../Profil/User/schemas/user.schema";
+
 
 @Injectable()
 @ApiTags('Conversation')

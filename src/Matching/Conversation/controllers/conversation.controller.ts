@@ -3,7 +3,6 @@ import { ConversationService } from '../conversation.service';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateConversationDto } from '../dtos/create.conversation';
 import { Conversation } from '../schemas/conversation.schema';
-import { User } from "../../Profil/schemas/profil.schema";
 
 @ApiTags("messaging")
 @Controller('conversation')

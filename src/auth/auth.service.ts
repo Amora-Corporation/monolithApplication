@@ -1,74 +1,138 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { CreateAuthDto } from "./dto/create-auth.dto";
-import { UpdateAuthDto } from "./dto/update-auth.dto";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Auth, AuthDocument } from "./schemas/auth.schema";
 import { Model, Schema, Types } from "mongoose";
-import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { ClientProxy, MessagePattern } from "@nestjs/microservices";
-import { firstValueFrom } from "rxjs";
+import { UserService } from "../Profil/User/user.service";
+import { InscriptionDto } from "./dto/inscription.dto";
+import { UpdateAuthDto } from "./dto/update-auth.dto";
+import * as bcrypt from "bcrypt";
+import { ConnexionDto } from "./dto/connexion.dto";
+
+
+
+
 
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
-
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    @Inject('TOKEN_SERVICE') private readonly client: ClientProxy
+    private readonly userService: UserService
   ) {
   }
 
-  async signUp(createAuthDto: CreateAuthDto): Promise<any> {
-    const userExists = await this.authModel.findOne({
-      email: createAuthDto.email
-    });
-
-    if (userExists) {
-      throw new BadRequestException("User already exists");
-    }
-
-    const hashedPassword = await this.hashData(createAuthDto.password);
-    const createdAuth = new this.authModel({
-      ...createAuthDto,
-      password: hashedPassword
-    });
-
-    await createdAuth.save();
-
-    const tokens = await this.getTokens(createdAuth._id, createdAuth.email);
-    await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
-
+  async signUp(inscriptionDto: InscriptionDto): Promise<any> {
     try {
-      // Envoyer un message et attendre la réponse
-      const response = await firstValueFrom(
-        this.client.send('CreateUser', {
-          id: createdAuth._id,
-          email: createdAuth.email
-        })
-      );
-
-      if (response.error) {
-        console.log(response.error)
-        await this.authModel.findByIdAndDelete(createdAuth._id);
-        throw new BadRequestException(response.error);
+      const userExists = await this.authModel.findOne({ email: inscriptionDto.email });
+      if (userExists) {
+        throw new BadRequestException("User already exists");
       }
 
-      return tokens;
+      console.log(inscriptionDto);
+
+      // Hacher le mot de passe et créer l'auth
+      const hashedPassword = await this.hashData(inscriptionDto.password);
+      const createdAuth = new this.authModel({
+        _id: new Types.ObjectId(),
+        ...inscriptionDto,
+        password: hashedPassword
+      });
+
+
+      await createdAuth.save();
+      try {
+        // Générer les tokens
+        console.log("createdAuth", createdAuth)
+        const tokens = await this.getTokens(createdAuth._id, createdAuth.email, createdAuth.roles);
+        await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
+        const createdUser = await this.userService.create({
+          _id: createdAuth._id,
+          email: createdAuth.email,
+          age_range: { max: 0, min: 0 },
+          bio: "",
+          birthdate: undefined,
+          children: "",
+          deal_breakers: [],
+          dietary_preferences: [],
+          dream_vacation: "",
+          drinker: "",
+          education: "",
+          ethnicity: "",
+          exercise_frequency: "",
+          favorite_movies: [],
+          favorite_music: [],
+          favorite_tv_shows: [],
+          first_name: "",
+          gender_ID: 0,
+          height: 0,
+          hobbies: [],
+          interested_genre: [],
+          interests: [],
+          languages: [],
+          last_name: "",
+          location: "",
+          looking_for: "",
+          nickname: "",
+          occupation: "",
+          personality_type: "",
+          pets: [],
+          photos: [],
+          political_views: "",
+          popularity: 0,
+          preferred_communication_style: [],
+          preferred_distance_range: { max: 0, min: 0 },
+          relationship_status: "",
+          religion: "",
+          smoker: false,
+          social_media_links: {},
+          travel_frequency: "",
+          vaccination_status: "",
+          verification_status: false,
+          verified_photos: false,
+          weight: 0,
+          work_life_balance: "",
+          zodiac_sign: ""
+        });
+        return { tokens, createdAuth, createdUser };
+      } catch (error) {
+        await this.authModel.findByIdAndDelete(createdAuth._id);
+        throw new InternalServerErrorException("Une erreur interne est survenue lors de la création de l'utilisateur", { cause: error });
+      }
     } catch (error) {
-      // En cas d'erreur de communication, supprimer l'utilisateur créé
-      await this.authModel.findByIdAndDelete(createdAuth._id);
-      throw new BadRequestException('Failed to create user account');
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.log(error)
+      throw new InternalServerErrorException("Une erreur interne est survenue",  error );
     }
   }
+
+
+  async signIn(connexionDto: ConnexionDto): Promise<{ accessToken: string; refreshToken: string }> {
+    const validatedUser = await this.validateUser(connexionDto.email, connexionDto.password);
+    if (!validatedUser) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+    console.log("validatedUser", validatedUser)
+    const tokens = await this.getTokens(validatedUser._id, validatedUser.email,validatedUser.roles);
+    await this.updateRefreshToken(validatedUser._id, tokens.refreshToken);
+    return tokens;
+  }
+
 
   async findAll(): Promise<Auth[]> {
     return this.authModel.find().exec();
   }
-
   async findOne(id: string): Promise<Auth> {
     const auth = await this.authModel.findById(id).exec();
     if (!auth) {
@@ -76,7 +140,6 @@ export class AuthService {
     }
     return auth;
   }
-
   async update(id: string, updateAuthDto: UpdateAuthDto): Promise<Auth> {
     if (updateAuthDto.password) {
       updateAuthDto.password = await bcrypt.hash(updateAuthDto.password, 10);
@@ -88,13 +151,13 @@ export class AuthService {
     return updatedAuth;
   }
 
-  async remove(id: string): Promise<Auth> {
-    const deletedAuth = await this.authModel.findByIdAndDelete(id).exec();
-    if (!deletedAuth) {
-      throw new NotFoundException(`Auth with ID "${id}" not found`);
-    }
-    return deletedAuth;
-  }
+  // async remove(id: string): Promise<Auth> {
+  //   const deletedAuth = await this.authModel.findByIdAndDelete(id).exec();
+  //   if (!deletedAuth) {
+  //     throw new NotFoundException(`Auth with ID "${id}" not found`);
+  //   }
+  //   return deletedAuth;
+  // }
 
   async findByEmail(email: string): Promise<Auth> {
     const auth = await this.authModel.findOne({ email: email }).exec();
@@ -113,42 +176,45 @@ export class AuthService {
   }
 
   hashData(data: string) {
-    return bcrypt.hash(data, 10)
+    console.log(data);
+    return bcrypt.hash(data, 10);
   }
 
   async updateRefreshToken(userId: Types.ObjectId, refreshToken: string) {
     const hashedRefreshToken = await this.hashData(refreshToken);
-    await this.update(userId.toString(), {
-      refreshToken: hashedRefreshToken,
+    await this.authModel.findByIdAndUpdate(userId, {
+      refreshToken: hashedRefreshToken
     });
   }
 
-  async getTokens(userId: Types.ObjectId, email: string) {
+
+  async getTokens(userId: Types.ObjectId, email: string, roles: string[]) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync({
           sub: userId,
-          email: email
+          email: email,
+          roles: roles,
         },
         {
           secret: this.configService.get<string>("JWT_SECRET_KEY"),
-          expiresIn: '15m'
-        },
+          expiresIn: "15m"
+        }
       ),
       this.jwtService.signAsync(
         {
           sub: userId,
-          email,
+          email
         },
         {
           secret: this.configService.get<string>("JWT_REFRESH_SECRET_KEY"),
-          expiresIn: '7d'
-        },
-      ),
+          expiresIn: "7d"
+        }
+      )
     ]);
 
     return {
       accessToken,
-      refreshToken,
+      refreshToken
     };
 
   }

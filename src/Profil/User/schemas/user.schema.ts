@@ -1,27 +1,30 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from "mongoose";
 
 export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop({ required: true })
+  @Prop({ type: Types.ObjectId, required: true, auto: true })
+  _id: Types.ObjectId;
+
+  @Prop()
   first_name: string;
 
-  @Prop({ required: true })
+  @Prop()
   last_name: string;
 
-  @Prop({ required: true })
+  @Prop()
   gender_ID: number;
 
-  @Prop({ required: true })
+  @Prop()
   nickname: string;
 
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
+  // @Prop({ required: true })
+  // password: string;
 
   @Prop()
   resetPasswordToken: string;
@@ -32,7 +35,7 @@ export class User {
   @Prop({ default: 0 })
   popularity: number;
 
-  @Prop({ required: true })
+  @Prop()
   birthdate: Date;
 
   @Prop()

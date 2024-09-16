@@ -14,7 +14,7 @@ import {
   IsObject,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class UpdateUserDto {
   @ApiProperty({ example: 'John', description: "Le prénom de l'utilisateur" })
   @IsString()
   @MinLength(2)

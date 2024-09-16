@@ -2,7 +2,7 @@ import { Gender, GenderDocument } from "./schemas/gender.schemas";
 import { Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { CreateMatchDto } from "../Matching/dtos/match.create";
+import { CreateMatchDto } from "../../Matching/dtos/match.create";
 import { CreateGerderDTO } from "./dtos/gender.create";
 
 

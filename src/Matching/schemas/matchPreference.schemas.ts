@@ -1,7 +1,7 @@
 import { Document, Types } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { User } from "../../Profil/schemas/profil.schema";
-import { Gender } from "../../Gender/schemas/gender.schemas";
+import { User } from "../../Profil/User/schemas/user.schema";
+import { Gender } from "../../Profil/Gender/schemas/gender.schemas";
 
 export type MatchPreferenceDocument = MatchPreference & Document;
 

@@ -2,7 +2,7 @@ import { Document, Types } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { MessageService } from "../message.service";
 import { Conversation } from "./conversation.schema";
-import { User } from "../../Profil/schemas/profil.schema";
+import { User } from "../../../Profil/User/schemas/user.schema";
 
 export type MessageDocument = Message & Document;
 

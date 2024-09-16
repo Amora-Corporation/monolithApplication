@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { User, UserDocument } from "../Profil/schemas/profil.schema";
+import { User, UserDocument } from "../Profil/User/schemas/user.schema";
 import { CreateInteractionDto } from "./dtos/Interaction.create";
 import { Interaction, InteractionDocument } from "./schemas/Interaction.schemas";
 import { MatchService } from "./match.service";

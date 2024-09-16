@@ -1,28 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ProfilController } from './profil.controller';
-import { ProfilService } from './profil.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './schemas/profil.schema';
-import { ClientsModule, Transport } from "@nestjs/microservices";
+import { UserModule } from "./User/user.module";
+import { PhotoModule } from "./Photo/photo.module";
+import { GenderModule } from "./Gender/gender.module";
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: "TOKEN_SERVICE",
-        transport: Transport.RMQ,
-        options: {
-          urls: ["amqp://localhost:5672"],
-          queue: "userQueue",
-          queueOptions: {
-            durable: false
-          }
-        }
-      }
-    ]),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    UserModule,
+    PhotoModule,
+    GenderModule,
   ],
-  controllers: [ProfilController],
-  providers: [ProfilService],
 })
 export class ProfilModule {}
