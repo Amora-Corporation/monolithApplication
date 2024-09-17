@@ -9,6 +9,8 @@ import { Auth } from "./auth/schemas/auth.schema";
 import { AuthModule } from "./auth/auth.module";
 import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
 import { APP_FILTER } from "@nestjs/core";
+import { EventResolver } from './event/event.resolver';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -25,11 +27,12 @@ import { APP_FILTER } from "@nestjs/core";
       inject: [ConfigService],
     }),
     ProfilModule,
-    AuthModule
+    AuthModule,
+    EventModule
   ],
   providers: [{
     provide: APP_FILTER,
     useClass: SentryGlobalFilter,
-  }]
+  }, EventResolver]
 })
 export class AppModule {}
