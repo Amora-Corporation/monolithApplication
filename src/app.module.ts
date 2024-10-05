@@ -10,6 +10,8 @@ import { AuthModule } from "./auth/auth.module";
 import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
 import { APP_FILTER } from "@nestjs/core";
 import { EventModule } from './event/event.module';
+import { MatchingModule } from './Matching/matching.module';
+
 
 @Module({
   imports: [
@@ -27,11 +29,13 @@ import { EventModule } from './event/event.module';
     }),
     ProfilModule,
     AuthModule,
-    EventModule
+    EventModule,
+    MatchingModule
   ],
   providers: [{
     provide: APP_FILTER,
     useClass: SentryGlobalFilter,
+    
   }]
 })
 export class AppModule {}
