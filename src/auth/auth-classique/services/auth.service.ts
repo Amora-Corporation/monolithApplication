@@ -31,7 +31,8 @@ export class AuthService {
   ) {
     otplib.authenticator.options = { step: 300 };
   }
-  private tempsMails = new Map<string, { password: string, otp: string }>(); 
+
+  private tempsMails = new Map<string, { password: string, otp: string }>();
 
   async signUp(inscriptionDto: InscriptionDto): Promise<any> {
     try {
@@ -101,7 +102,7 @@ export class AuthService {
           weight: 0,
           work_life_balance: "",
           zodiac_sign: "",
-          empty_account:true,
+          empty_account: true,
         });
         return { tokens, createdAuth, createdUser };
       } catch (error) {
@@ -113,7 +114,7 @@ export class AuthService {
         throw error;
       }
       console.log(error)
-      throw new InternalServerErrorException("Une erreur interne est survenue",  error );
+      throw new InternalServerErrorException("Une erreur interne est survenue", error);
     }
   }
 
@@ -165,59 +166,53 @@ export class AuthService {
   // }
   async signInOrUp(insCoDto: InscriptionDto)
   //:
-   //Promise<{ accessToken: string; refreshToken: string; isEmptyAccount: boolean }> 
-   {
+  //Promise<{ accessToken: string; refreshToken: string; isEmptyAccount: boolean }> 
+  {
     try {
-        const existingUser = await this.authModel.findOne({ email:  insCoDto.email }).exec();
+      const existingUser = await this.authModel.findOne({ email: insCoDto.email }).exec();
 
-        if (existingUser) {
-          // Si l'utilisateur existe, valider les informations de connexion
-          const isPasswordValid = await bcrypt.compare(insCoDto.password, existingUser.password);
-          if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid password');
-          }
+      if (existingUser) {
+        // Si l'utilisateur existe, valider les informations de connexion
+        const isPasswordValid = await bcrypt.compare(insCoDto.password, existingUser.password);
+        if (!isPasswordValid) {
+          throw new UnauthorizedException('Invalid password');
         }
+      }
 
-        //const hashedPassword = await this.hashData(insCoDto.password);
-        const otp = this.generateOtp();
+      //const hashedPassword = await this.hashData(insCoDto.password);
 
-        this.sendOtp(insCoDto.email,otp);
-        // if (existingUser) {
-        //     return await this.signIn({ email: insCoDto.email, password: insCoDto.password });
-        // } else {
-        //     return await this.signUp(insCoDto);
-        // }
-        this.tempsMails.set(insCoDto.email, { password:insCoDto.password, otp });
+      const otp = otplib.authenticator.generate(insCoDto.password);;
+      this.sendOtp(insCoDto.email, otp);
+      this.tempsMails.set(insCoDto.email, { password: insCoDto.password, otp });
 
-        return { message: 'OTP envoyé à votre adresse e-mail. Veuillez vérifier pour continuer.' };
+      return { message: 'OTP envoyé à votre adresse e-mail. Veuillez vérifier pour continuer.' };
     } catch (error) {
-        console.error("Error in signInOrUp:", error);
-        throw new InternalServerErrorException("Une erreur interne est survenue");
+      console.error("Error in signInOrUp:", error);
+      throw new InternalServerErrorException("Une erreur interne est survenue");
     }
-}
-
-
-async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string }> {
-  const tempData = this.tempsMails.get(email);
-  if (!tempData) {
-    throw new BadRequestException('Aucune tentative de connexion trouvée pour cet e-mail.');
   }
-  console.log(tempData)
-  const isOtpValid = otp===tempData.otp;
-  //this.verifyOtpCode(otp, tempData.otp);
-  if (!isOtpValid) {
-    throw new UnauthorizedException('OTP invalide');
-  }
-  // Si l'OTP est valide, générer les tokens
-  const existingUser = await this.authModel.findOne({ email }).exec();
-   if (existingUser) {
-          return await this.signIn({ email, password: tempData.password });
+
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string }> {
+    const tempData = this.tempsMails.get(email);
+    if (!tempData) {
+      throw new BadRequestException('Aucune tentative de connexion trouvée pour cet e-mail.');
+    }
+    console.log(tempData)
+    //insCoDto.passwordconst isOtpValid = otp===tempData.otp;
+    const isOtpValid = this.verifyOtpCode(otp, tempData.password);
+    if (!isOtpValid) {
+      throw new UnauthorizedException('OTP invalide');
+    }
+    // Si l'OTP est valide, générer les tokens
+    const existingUser = await this.authModel.findOne({ email }).exec();
+    if (existingUser) {
+      return await this.signIn({ email, password: tempData.password });
     } else {
-          this.tempsMails.delete(email);
-          return await this.signUp({ email, password: tempData.password });
+      this.tempsMails.delete(email);
+      return await this.signUp({ email, password: tempData.password });
     }
 
-}
+  }
 
   async findByEmail(email: string): Promise<Auth> {
     const auth = await this.authModel.findOne({ email: email }).exec();
@@ -251,10 +246,10 @@ async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refr
   async getTokens(userId: Types.ObjectId, email: string, roles: string[]) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync({
-          sub: userId,
-          email: email,
-          roles: roles,
-        },
+        sub: userId,
+        email: email,
+        roles: roles,
+      },
         {
           secret: this.configService.get<string>("JWT_SECRET_KEY"),
           expiresIn: "15m"
@@ -279,13 +274,15 @@ async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refr
 
   }
 
-  generateOtp() {
-    return otplib.authenticator.generate(otplib.authenticator.generateSecret());
-  }
+  // generateOtp() {
+  //   console.log(otplib.authenticator.generateSecret())
+  //   return otplib.authenticator.generate(otplib.authenticator.generateSecret());
+  // }
 
   verifyOtpCode(otp: string, secret: string) {
     return otplib.authenticator.check(otp, secret);
   }
+
 
   async sendOtp(email: string, otp: string) {
     const result = await this.mailService.sendOtpEmail(email, otp);
@@ -293,6 +290,7 @@ async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refr
       throw new UnauthorizedException('Erreur lors de l\'envoi de l\'OTP');
     }
     return { message: 'OTP envoyé par email' };
+
   }
 
 }
