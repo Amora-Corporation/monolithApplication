@@ -159,6 +159,9 @@ export class User {
 
   @Prop()
   dream_vacation: string;
+
+  @Prop({ default: false })
+  empty_account: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

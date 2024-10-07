@@ -5,7 +5,7 @@ import { GenderModule } from "./Profil/Gender/gender.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ProfilModule } from "./Profil/profil.module";
-import { Auth } from "./auth/schemas/auth.schema";
+import { Auth } from "./auth/auth-classique/schemas/auth.schema";
 import { AuthModule } from "./auth/auth.module";
 import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
 import { APP_FILTER } from "@nestjs/core";
@@ -30,7 +30,7 @@ import { MatchingModule } from './Matching/matching.module';
     ProfilModule,
     AuthModule,
     EventModule,
-    MatchingModule
+    MatchingModule,
   ],
   providers: [{
     provide: APP_FILTER,

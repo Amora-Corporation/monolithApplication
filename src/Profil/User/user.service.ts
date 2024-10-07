@@ -20,6 +20,7 @@ export class UserService {
     console.log(createUserDto)
     const createdUser = new this.userModel(createUserDto);
     return createdUser.save();
+    
   }
 
   @ApiOperation({ summary: 'Obtenir tous les profils utilisateurs' })
@@ -39,7 +40,7 @@ export class UserService {
     type: User,
   })
   @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-  async findOne(id: string): Promise<User> {
+  async findOne(id: Types.ObjectId): Promise<User> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
       throw new NotFoundException(`Profil avec l'ID ${id} non trouvé`);

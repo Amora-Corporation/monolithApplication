@@ -1,14 +1,18 @@
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
-import { Body, Controller, Post, Get, Put, Delete, Param, NotFoundException } from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBearerAuth } from "@nestjs/swagger";
+import { Body, Controller, Post, Get, Put, Delete, Param, NotFoundException, UseGuards } from "@nestjs/common";
 import { InteractionService } from "../interaction.service";
 import { Interaction } from "../schemas/Interaction.schemas";
 import { CreateInteractionDto } from "../dtos/Interaction.create";
 import { UpdateInteractionDto } from "../dtos/Interaction.update";
+import { AuthGuard } from "src/auth/auth-classique/guards/auth.guard";
 
 @ApiTags("matching")
 @Controller("Interaction")
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class InteractionController {
   constructor(private readonly interactionService: InteractionService) {}
+
 
   @Post("Like")
   @ApiOperation({ summary: "Envoyer un like" })

@@ -1,11 +1,14 @@
 import { PhotoService } from "./photo.service";
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, NotFoundException } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, NotFoundException, UseGuards } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Photo } from "./schemas/photo.schema";
 import { CreatePhotoDto } from "./dtos/create.photo";
+import { AuthGuard } from "src/auth/auth-classique/guards/auth.guard";
 
 @ApiTags("Photos")
 @Controller("Photo")
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class PhotoController {
   constructor(private readonly photoService: PhotoService) {}
 

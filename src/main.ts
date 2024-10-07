@@ -32,12 +32,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization',
-    credentials: true,
-  });
+  app.enableCors();
+  
 
   // Appliquer le middleware d'authentification pour Swagger
   app.use('/api', swaggerAuthMiddleware(configService));
@@ -46,6 +42,7 @@ async function bootstrap() {
     .setTitle("API de l'application de rencontre AuthService")
     .setDescription("La documentation API pour notre application de rencontre")
     .setVersion('1.0')
+    .addTag('Auth Social Media')
     .addTag('Auth Classique')
     .addTag('User')
     .addTag("matching")

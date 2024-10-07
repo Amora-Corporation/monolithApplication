@@ -21,29 +21,31 @@ import {
 import { User } from "./schemas/user.schema";
 import { CreateUserDto } from "./dtos/create.user";
 import { UserService } from "./user.service";
-import { AuthGuard } from "../../auth/guards/auth.guard";
-import { Admin } from "../../auth/decorators/isAdmin.decorator";
-import { Public } from "../../auth/decorators/public.decorator";
+import { AuthGuard } from "../../auth/auth-classique/guards/auth.guard";
+import { Admin } from "../../auth/common/decorators/isAdmin.decorator";
+import { Public } from "../../auth/common/decorators/public.decorator";
+import { ObjectId, Types } from "mongoose";
+import { UpdateUserDto } from "./dtos/update.user";
 
 @ApiTags("User")
 @Controller("User")
-@ApiBearerAuth()
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
-  @Public()
-  @Post()
-  @ApiOperation({ summary: "Créer un nouveau profil utilisateur" })
-  @ApiResponse({
-    status: 201,
-    description: "Le profil a été créé avec succès.",
-    type: User,
-  })
-  @ApiBody({ type: CreateUserDto })
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return this.userService.create(createUserDto);
-  }
+  // @Public()
+  // @Post()
+  // @ApiOperation({ summary: "Créer un nouveau profil utilisateur" })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: "Le profil a été créé avec succès.",
+  //   type: User,
+  // })
+  // @ApiBody({ type: CreateUserDto })
+  // async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+  //   return this.userService.create(createUserDto);
+  // }
 
 
 
@@ -60,9 +62,8 @@ export class UserController {
   }
 
 
-
+  @Admin()
   @Get(":id")
-
   @ApiOperation({ summary: "Obtenir un profil utilisateur par ID" })
   @ApiResponse({
     status: 200,
@@ -72,20 +73,21 @@ export class UserController {
   @ApiResponse({ status: 404, description: "Profil non trouvé." })
   @ApiParam({ name: "id", description: "ID du profil utilisateur" })
   async findOne(@Param("id") id: string): Promise<User> {
-    return this.userService.findOne(id);
+    const objectId = new Types.ObjectId(id);
+    return this.userService.findOne(objectId);
   }
 
-  //   @Put(':id')
-  //   @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
-  //   @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
-  //   @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-  //   @ApiParam({ name: 'id', description: 'ID du profil utilisateur' })
-  //   @ApiBody({ type: UpdateUserDto })
-  //   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
-  //     return this.profilService.update(id, updateUserDto);
-  //   }
+  // @Put(':id')
+  // @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
+  // @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
+  // @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
+  // @ApiParam({ name: 'id', description: 'ID du profil utilisateur' })
+  // @ApiBody({ type: UpdateUserDto })
+  // async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+  //   return this.userService.update(id, updateUserDto);
+  // }
 
-
+  @Admin()
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer un profil utilisateur" })
   @ApiResponse({
@@ -98,6 +100,8 @@ export class UserController {
     return this.userService.remove(id);
   }
 
+
+  @Admin()
   @Get("search")
   @ApiOperation({ summary: "Rechercher des profils utilisateurs" })
   @ApiResponse({
@@ -109,6 +113,7 @@ export class UserController {
   async search(@Query("query") query: string): Promise<User[]> {
     return this.userService.search(query);
   }
+
 
 
 }

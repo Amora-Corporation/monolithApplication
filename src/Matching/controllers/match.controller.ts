@@ -1,12 +1,15 @@
 import { MatchService } from "../match.service";
 import { Match } from "../schemas/match.schemas";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException } from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBearerAuth } from "@nestjs/swagger";
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, UseGuards } from "@nestjs/common";
 import { CreateMatchDto } from "../dtos/match.create";
 import { UpdateMatchDto } from "../dtos/match.update";
+import { AuthGuard } from "src/auth/auth-classique/guards/auth.guard";
 
 @ApiTags("matching")
 @Controller("matching")
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 

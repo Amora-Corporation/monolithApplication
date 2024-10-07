@@ -14,10 +14,12 @@ import { MatchPreferenceController } from "./controllers/matchPreference.control
 import { MatchPreferenceService } from "./matchPreference.service";
 import { Conversation, ConversationSchema } from "./Conversation/schemas/conversation.schema";
 import { Message, MessageSchema } from "./Conversation/schemas/message.schemas";
+import { JwtModule } from '@nestjs/jwt';
 
 
 @Module({
   imports: [
+    JwtModule.register({}),
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema }
     ]),

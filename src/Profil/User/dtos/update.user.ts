@@ -380,4 +380,8 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   dream_vacation: string;
+
+  @IsBoolean()
+  @IsOptional()
+  empty_account: boolean;
 }

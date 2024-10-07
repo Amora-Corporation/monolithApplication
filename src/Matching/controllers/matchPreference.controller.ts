@@ -1,12 +1,15 @@
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
-import { Body, Controller, HttpStatus, Post, Get, Put, Delete, Param, NotFoundException } from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBearerAuth } from "@nestjs/swagger";
+import { Body, Controller, HttpStatus, Post, Get, Put, Delete, Param, NotFoundException, UseGuards } from "@nestjs/common";
 import { MatchPreferenceService } from "../matchPreference.service";
 import { MatchPreference } from "../schemas/matchPreference.schemas";
 import { CreateMatchPreferenceDto } from "../dtos/matchPreference.create";
 import { UpdateMatchPreferenceDto } from "../dtos/matchPreference.update";
+import { AuthGuard } from "src/auth/auth-classique/guards/auth.guard";
 
 @ApiTags("matching")
 @Controller("matchingPreference")
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class MatchPreferenceController {
   constructor(private readonly matchPreferenceService: MatchPreferenceService) {}
 

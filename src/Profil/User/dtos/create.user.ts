@@ -389,4 +389,13 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   dream_vacation: string;
+
+  @ApiPropertyOptional({
+    example: 'Bali',
+    description: "La destination de vacances de rêve de l'utilisateur",
+  })
+  @IsBoolean()
+  @IsOptional()
+  empty_account: boolean;
+
 }
