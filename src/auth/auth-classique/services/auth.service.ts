@@ -1,5 +1,8 @@
 import {
   BadRequestException,
+  HttpCode,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -17,11 +20,14 @@ import * as bcrypt from "bcrypt";
 import { ConnexionDto } from "../../common/dto/connexion.dto";
 import * as otplib from 'otplib';
 import { MailService } from "./mail.service";
+import { ForgotPasswordDto } from "src/auth/common/dto/forgot-password.dto";
+import { randomInt } from "crypto";
 
 
 
 @Injectable()
 export class AuthService {
+  
   constructor(
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private readonly jwtService: JwtService,
@@ -29,7 +35,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly mailService: MailService,
   ) {
-    otplib.authenticator.options = { step: 300 };
+    otplib.authenticator.options = { step: 10 };
   }
 
   private tempsMails = new Map<string, { password: string, otp: string }>();
@@ -40,7 +46,7 @@ export class AuthService {
       if (userExists) {
         throw new BadRequestException("User already exists");
       }
-      console.log(inscriptionDto);
+
       // Hacher le mot de passe et créer l'auth
       const hashedPassword = await this.hashData(inscriptionDto.password);
       const createdAuth = new this.authModel({
@@ -52,7 +58,7 @@ export class AuthService {
       await createdAuth.save();
       try {
         // Générer les tokens
-        console.log("createdAuth", createdAuth)
+   
         const tokens = await this.getTokens(createdAuth._id, createdAuth.email, createdAuth.roles);
         await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
         const createdUser = await this.userService.create({
@@ -113,7 +119,7 @@ export class AuthService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      console.log(error)
+ 
       throw new InternalServerErrorException("Une erreur interne est survenue", error);
     }
   }
@@ -125,7 +131,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
     const validatedUser = await this.userService.findOne(validatedAuthUser._id);
-    console.log("validatedAuthUser", validatedUser);
+
     const tokens = await this.getTokens(validatedAuthUser._id, validatedAuthUser.email, validatedAuthUser.roles);
     await this.updateRefreshToken(validatedAuthUser._id, tokens.refreshToken);
     return {
@@ -172,7 +178,6 @@ export class AuthService {
       const existingUser = await this.authModel.findOne({ email: insCoDto.email }).exec();
 
       if (existingUser) {
-        // Si l'utilisateur existe, valider les informations de connexion
         const isPasswordValid = await bcrypt.compare(insCoDto.password, existingUser.password);
         if (!isPasswordValid) {
           throw new UnauthorizedException('Invalid password');
@@ -180,8 +185,9 @@ export class AuthService {
       }
 
       //const hashedPassword = await this.hashData(insCoDto.password);
-
-      const otp = otplib.authenticator.generate(insCoDto.password);;
+      console.log("insCoDto.password"+insCoDto.password)
+      const otp = otplib.authenticator.generate(insCoDto.password);
+      console.log(otp)
       this.sendOtp(insCoDto.email, otp);
       this.tempsMails.set(insCoDto.email, { password: insCoDto.password, otp });
 
@@ -197,9 +203,13 @@ export class AuthService {
     if (!tempData) {
       throw new BadRequestException('Aucune tentative de connexion trouvée pour cet e-mail.');
     }
-    console.log(tempData)
-    //insCoDto.passwordconst isOtpValid = otp===tempData.otp;
-    const isOtpValid = this.verifyOtpCode(otp, tempData.password);
+
+    const isOtpValid = otp===tempData.otp;
+    //const isOtpValid = otplib.authenticator.check(otp, tempData.password);
+    console.log("otp"+otp);
+    console.log("tempDataOtp"+tempData.otp);
+    console.log("password"+tempData.password);
+    
     if (!isOtpValid) {
       throw new UnauthorizedException('OTP invalide');
     }
@@ -279,9 +289,9 @@ export class AuthService {
   //   return otplib.authenticator.generate(otplib.authenticator.generateSecret());
   // }
 
-  verifyOtpCode(otp: string, secret: string) {
-    return otplib.authenticator.check(otp, secret);
-  }
+  // verifyOtpCode(otp: string, secret: string) {
+  //   return otplib.authenticator.check(otp, secret);
+  // }
 
 
   async sendOtp(email: string, otp: string) {
@@ -293,4 +303,22 @@ export class AuthService {
 
   }
 
+
+  async forgotPassword(forgotPasswordDTO: ForgotPasswordDto) {
+    const existingUser = await this.authModel.findOne({ email: forgotPasswordDTO.email }).exec();
+  
+    if (!existingUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    const secret= randomInt(100000, 999999).toString();
+    const otp = otplib.authenticator.generate(secret);
+    
+    // Sauvegardez l'OTP dans la base de données ou un cache avec une durée de validité
+    this.tempsMails.set(forgotPasswordDTO.email,{password:secret,otp:otp})
+    // Envoyez l'OTP par email
+    await this.sendOtp(forgotPasswordDTO.email, otp);
+  
+    return { message: 'OTP sent successfully' };
+  }
 }
+

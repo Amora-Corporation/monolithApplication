@@ -16,11 +16,11 @@ export class MessageService {
   async create(
     createMessageDTO: CreateMessageDTO,
   ):Promise<Message>{
-    console.log(createMessageDTO.conversation_Id)
+    //console.log(createMessageDTO.conversation_Id)
     const conversation = await this.ConversationModel.findById(createMessageDTO.conversation_Id)
     const sender = await this.userModel.findById(createMessageDTO.sender_Id);
-    console.log("conversation",conversation)
-    console.log("sender",sender)
+    //console.log("conversation",conversation)
+    //console.log("sender",sender)
     if (!sender || !conversation) {
       throw new NotFoundException('Conversation ou utilisateur existe pas');
     }

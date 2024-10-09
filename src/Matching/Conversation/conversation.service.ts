@@ -29,7 +29,7 @@ export class ConversationService {
     );
     const userIds = createdConversation.participants_ID;
     const existingUsers= await this.userModel.find({ _id :{$in: userIds } }).exec();
-    console.log(existingUsers);
+    //console.log(existingUsers);
 
     if (existingUsers.length !== userIds.length) {
       throw new NotFoundException("il y'a un utilisateur qui m'existe pas")

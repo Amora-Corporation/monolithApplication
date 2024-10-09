@@ -4,6 +4,7 @@ import { Model, Types } from "mongoose";
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateUserDto } from "./dtos/create.user";
 import { User, UserDocument } from "./schemas/user.schema";
+import { UpdateUserDto } from './dtos/update.user';
 
 
 @Injectable()
@@ -17,7 +18,7 @@ export class UserService {
   })
   @ApiResponse({ status: 400, description: 'Données invalides.' })
   async create(createUserDto: CreateUserDto): Promise<User> {
-    console.log(createUserDto)
+    //console.log(createUserDto)
     const createdUser = new this.userModel(createUserDto);
     return createdUser.save();
     
@@ -48,18 +49,18 @@ export class UserService {
     return user;
   }
 
-  //   @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
-  //   @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
-  //   @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-  //   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-  //     const updatedUser = await this.userModel
-  //       .findByIdAndUpdate(id, updateUserDto, { new: true })
-  //       .exec();
-  //     if (!updatedUser) {
-  //       throw new NotFoundException(`Profil avec l'ID ${id} non trouvé`);
-  //     }
-  //     return updatedUser;
-  //   }
+    @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
+    @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
+    @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
+    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+      const updatedUser = await this.userModel
+        .findByIdAndUpdate(id, updateUserDto, { new: true })
+        .exec();
+      if (!updatedUser) {
+        throw new NotFoundException(`Profil avec l'ID ${id} non trouvé`);
+      }
+      return updatedUser;
+    }
 
   @ApiOperation({ summary: 'Supprimer un profil utilisateur' })
   @ApiResponse({

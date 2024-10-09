@@ -5,7 +5,8 @@ import {
   Delete,
   Body,
   Param,
-  Query, UseGuards
+  Query, UseGuards,
+  Put
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -77,15 +78,15 @@ export class UserController {
     return this.userService.findOne(objectId);
   }
 
-  // @Put(':id')
-  // @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
-  // @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
-  // @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-  // @ApiParam({ name: 'id', description: 'ID du profil utilisateur' })
-  // @ApiBody({ type: UpdateUserDto })
-  // async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
-  //   return this.userService.update(id, updateUserDto);
-  // }
+  @Put(':id')
+  @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
+  @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
+  @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
+  @ApiParam({ name: 'id', description: 'ID du profil utilisateur' })
+  @ApiBody({ type: UpdateUserDto })
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+    return this.userService.update(id, updateUserDto);
+  }
 
   @Admin()
   @Delete(":id")

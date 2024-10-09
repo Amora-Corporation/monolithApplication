@@ -17,9 +17,10 @@ import { Public } from "../common/decorators/public.decorator";
 import { Admin } from "../common/decorators/isAdmin.decorator";
 import { MailService } from "./services/mail.service";
 import { AuthService } from "./services/auth.service";
+import { ForgotPasswordDto } from "../common/dto/forgot-password.dto";
 
 @Controller('auth-classique')
-@ApiTags('Auth Classique') // Documentation Swagger
+@ApiTags('Auth Classique') 
 export class AuthController {
  
   constructor(
@@ -58,7 +59,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Admin()
   @Get()
-  @ApiOperation({ summary: 'Retrieve all users (Admin only)' })  
+  @ApiOperation({ summary: 'Retrieve all Auth User (Admin only)' })  
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })  
   findAll() {
     return this.authService.findAll();
@@ -82,6 +83,15 @@ export class AuthController {
   }
 
   
+  @Public()
+  @Post('/ForgotPassword')
+  @ApiOperation({ summary: 'Initiate password reset process' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({ status: 200, description: 'Password reset email sent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async forgotPassword(@Body() forgotPasswordDTO:ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDTO);
+  }
 
   // @Public()
   // @Post('sendOtp')

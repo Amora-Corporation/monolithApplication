@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { User, UserDocument } from "../Profil/User/schemas/user.schema";
 import { CreateInteractionDto } from "./dtos/Interaction.create";
 import { Interaction, InteractionDocument } from "./schemas/Interaction.schemas";
@@ -23,10 +23,14 @@ export class InteractionService {
     if (createLikeDTO.receiver_user_ID === createLikeDTO.sender_user_ID) {
       throw new NotFoundException("Sender and receiver ID same");
     }
+    //console.log("createLikeDTO.receiver_user_ID"+createLikeDTO.receiver_user_ID)
+    
     const [senderUser, receiverUser] = await Promise.all([
-      this.userModel.findById(createLikeDTO.sender_user_ID),
-      this.userModel.findById(createLikeDTO.receiver_user_ID)
+      this.userModel.findById(new Types.ObjectId(createLikeDTO.sender_user_ID)),
+      this.userModel.findById(new Types.ObjectId(createLikeDTO.receiver_user_ID))
     ]);
+
+
 
     if (!receiverUser || !senderUser) {
       throw new NotFoundException("Sender Or Receiver User Not Found");
@@ -41,6 +45,7 @@ export class InteractionService {
         sender_user_ID: createLikeDTO.receiver_user_ID
       })
     ])
+
 
     let interaction: Interaction;
 
@@ -64,7 +69,7 @@ export class InteractionService {
         isActive: true
       };
       const newMatch = await this.matchService.createMatch(matchDto);
-      console.log(newMatch)
+      //console.log(newMatch)
     }
     return interaction;
   }
@@ -77,8 +82,8 @@ export class InteractionService {
       throw new NotFoundException("Sender and receiver ID same");
     }
     const [senderUser, receiverUser] = await Promise.all([
-      this.userModel.findById(createDislikeDTO.sender_user_ID),
-      this.userModel.findById(createDislikeDTO.receiver_user_ID)
+      this.userModel.findById(new Types.ObjectId(createDislikeDTO.sender_user_ID)),
+      this.userModel.findById(new Types.ObjectId(createDislikeDTO.receiver_user_ID))
     ]);
 
     if (!receiverUser || !senderUser) {
@@ -123,3 +128,4 @@ export class InteractionService {
     return result.deletedCount === 1;
   }
 }
+

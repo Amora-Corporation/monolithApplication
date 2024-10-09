@@ -40,13 +40,13 @@ export class AuthGuard implements CanActivate {
         context.getHandler(),
         context.getClass(),
       ]);
-      console.log(payload)
+
       if (isAdmin && !payload.roles.includes('admin')) {
         throw new UnauthorizedException('Admin access required');
       }
 
     } catch (error) {
-      console.log(error)
+  
       throw new UnauthorizedException('Invalid token');
     }
     return true;
