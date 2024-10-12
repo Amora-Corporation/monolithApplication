@@ -52,7 +52,7 @@ export class UserService {
     @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
     @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
     @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    async update(id: Types.ObjectId, updateUserDto: UpdateUserDto): Promise<User> {
       const updatedUser = await this.userModel
         .findByIdAndUpdate(id, updateUserDto, { new: true })
         .exec();

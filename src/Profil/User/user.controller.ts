@@ -85,7 +85,8 @@ export class UserController {
   @ApiParam({ name: 'id', description: 'ID du profil utilisateur' })
   @ApiBody({ type: UpdateUserDto })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
-    return this.userService.update(id, updateUserDto);
+    const objectId = new Types.ObjectId(id);
+    return this.userService.update(objectId, updateUserDto);
   }
 
   @Admin()
