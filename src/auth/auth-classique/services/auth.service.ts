@@ -22,6 +22,7 @@ import * as otplib from 'otplib';
 import { MailService } from "./mail.service";
 import { ForgotPasswordDto } from "src/auth/common/dto/forgot-password.dto";
 import { randomInt } from "crypto";
+import { User } from "src/Profil/User/schemas/user.schema";
 
 
 
@@ -110,7 +111,7 @@ export class AuthService {
           zodiac_sign: "",
           empty_account: true,
         });
-        return { tokens, createdAuth, createdUser };
+        return { ...tokens, User:createdUser };
       } catch (error) {
         await this.authModel.findByIdAndDelete(createdAuth._id);
         throw new InternalServerErrorException("Une erreur interne est survenue lors de la création de l'utilisateur", { cause: error });
@@ -125,7 +126,7 @@ export class AuthService {
   }
 
 
-  async signIn(connexionDto: ConnexionDto): Promise<{ accessToken: string; refreshToken: string; isEmptyAccount: boolean }> {
+  async signIn(connexionDto: ConnexionDto): Promise<{ accessToken: string; refreshToken: string; User: User }> {
     const validatedAuthUser = await this.validateUser(connexionDto.email, connexionDto.password);
     if (!validatedAuthUser) {
       throw new UnauthorizedException("Invalid credentials");
@@ -136,7 +137,7 @@ export class AuthService {
     await this.updateRefreshToken(validatedAuthUser._id, tokens.refreshToken);
     return {
       ...tokens,
-      isEmptyAccount: validatedUser.empty_account,
+      User: validatedUser,
     };
 
   }
@@ -216,6 +217,7 @@ export class AuthService {
     // Si l'OTP est valide, générer les tokens
     const existingUser = await this.authModel.findOne({ email }).exec();
     if (existingUser) {
+      this.tempsMails.delete(email);
       return await this.signIn({ email, password: tempData.password });
     } else {
       this.tempsMails.delete(email);
