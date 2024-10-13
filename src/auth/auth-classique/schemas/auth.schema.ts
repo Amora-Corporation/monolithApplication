@@ -14,9 +14,6 @@ export class Auth {
   @Prop({ required: true })
   password: string;
 
-  @Prop()
-  refreshToken?: string;
-
   @Prop({ type: [String], default: ["admin"] })
   roles: string[];
 }

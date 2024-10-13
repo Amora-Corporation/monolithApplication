@@ -28,7 +28,7 @@ import { User } from "src/Profil/User/schemas/user.schema";
 
 @Injectable()
 export class AuthService {
-  
+
   constructor(
     @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
     private readonly jwtService: JwtService,
@@ -59,9 +59,9 @@ export class AuthService {
       await createdAuth.save();
       try {
         // Générer les tokens
-   
+
         const tokens = await this.getTokens(createdAuth._id, createdAuth.email, createdAuth.roles);
-        await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
+        //await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
         const createdUser = await this.userService.create({
           _id: createdAuth._id,
           email: createdAuth.email,
@@ -111,7 +111,7 @@ export class AuthService {
           zodiac_sign: "",
           empty_account: true,
         });
-        return { ...tokens, User:createdUser };
+        return { ...tokens, User: createdUser };
       } catch (error) {
         await this.authModel.findByIdAndDelete(createdAuth._id);
         throw new InternalServerErrorException("Une erreur interne est survenue lors de la création de l'utilisateur", { cause: error });
@@ -120,7 +120,7 @@ export class AuthService {
       if (error instanceof BadRequestException) {
         throw error;
       }
- 
+
       throw new InternalServerErrorException("Une erreur interne est survenue", error);
     }
   }
@@ -134,7 +134,7 @@ export class AuthService {
     const validatedUser = await this.userService.findOne(validatedAuthUser._id);
 
     const tokens = await this.getTokens(validatedAuthUser._id, validatedAuthUser.email, validatedAuthUser.roles);
-    await this.updateRefreshToken(validatedAuthUser._id, tokens.refreshToken);
+    //await this.updateRefreshToken(validatedAuthUser._id, tokens.refreshToken);
     return {
       ...tokens,
       User: validatedUser,
@@ -186,7 +186,7 @@ export class AuthService {
       }
 
       //const hashedPassword = await this.hashData(insCoDto.password);
-      console.log("insCoDto.password"+insCoDto.password)
+      console.log("insCoDto.password" + insCoDto.password)
       const otp = otplib.authenticator.generate(insCoDto.password);
       console.log(otp)
       this.sendOtp(insCoDto.email, otp);
@@ -205,12 +205,12 @@ export class AuthService {
       throw new BadRequestException('Aucune tentative de connexion trouvée pour cet e-mail.');
     }
 
-    const isOtpValid = otp===tempData.otp;
+    const isOtpValid = otp === tempData.otp;
     //const isOtpValid = otplib.authenticator.check(otp, tempData.password);
-    console.log("otp"+otp);
-    console.log("tempDataOtp"+tempData.otp);
-    console.log("password"+tempData.password);
-    
+    console.log("otp" + otp);
+    console.log("tempDataOtp" + tempData.otp);
+    console.log("password" + tempData.password);
+
     if (!isOtpValid) {
       throw new UnauthorizedException('OTP invalide');
     }
@@ -247,18 +247,18 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async updateRefreshToken(userId: Types.ObjectId, refreshToken: string) {
-    const hashedRefreshToken = await this.hashData(refreshToken);
-    await this.authModel.findByIdAndUpdate(userId, {
-      refreshToken: hashedRefreshToken
-    });
-  }
+  // async updateRefreshToken(userId: Types.ObjectId, refreshToken: string) {
+  //   const hashedRefreshToken = await this.hashData(refreshToken);
+  //   await this.authModel.findByIdAndUpdate(userId, {
+  //     refreshToken: hashedRefreshToken
+  //   });
+  // }
 
 
   async getTokens(userId: Types.ObjectId, email: string, roles: string[]) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync({
-        sub: userId,
+        sub: userId.toHexString(),
         email: email,
         roles: roles,
       },
@@ -269,7 +269,7 @@ export class AuthService {
       ),
       this.jwtService.signAsync(
         {
-          sub: userId,
+          sub: userId.toHexString(),
           email
         },
         {
@@ -308,19 +308,45 @@ export class AuthService {
 
   async forgotPassword(forgotPasswordDTO: ForgotPasswordDto) {
     const existingUser = await this.authModel.findOne({ email: forgotPasswordDTO.email }).exec();
-  
+
     if (!existingUser) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-    const secret= randomInt(100000, 999999).toString();
+    const secret = randomInt(100000, 999999).toString();
     const otp = otplib.authenticator.generate(secret);
-    
+
     // Sauvegardez l'OTP dans la base de données ou un cache avec une durée de validité
-    this.tempsMails.set(forgotPasswordDTO.email,{password:secret,otp:otp})
+    this.tempsMails.set(forgotPasswordDTO.email, { password: secret, otp: otp })
     // Envoyez l'OTP par email
     await this.sendOtp(forgotPasswordDTO.email, otp);
-  
+
     return { message: 'OTP sent successfully' };
   }
+
+  async refreshToken(token: string) {
+    try {
+      // Décodez le token pour obtenir le payload sans vérifier la signature
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>("JWT_REFRESH_SECRET_KEY")
+      });
+
+      if (!payload || typeof payload !== 'object') {
+        throw new UnauthorizedException('Invalid token payload');
+      }
+      const userId = new Types.ObjectId(payload.sub);
+      const user = await this.authModel.findById(userId);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+      const tokens = await this.getTokens(user._id, user.email, user.roles);
+      //await this.updateRefreshToken(payload.sub, tokens.refreshToken);
+      return tokens;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+  }
+
 }
 
