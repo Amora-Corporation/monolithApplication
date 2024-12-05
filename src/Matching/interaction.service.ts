@@ -11,7 +11,7 @@ import { UpdateInteractionDto } from "./dtos/Interaction.update";
 
 @Injectable()
 export class InteractionService {
-  constructor(@InjectModel(Interaction.name) private interactionModel: Model<InteractionDocument>,
+  constructor(@InjectModel(Interaction.name) private readonly interactionModel: Model<InteractionDocument>,
               @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
               private readonly matchService: MatchService) {
   }
@@ -50,7 +50,7 @@ export class InteractionService {
     let interaction: Interaction;
 
     if (existingLike) {
-      existingLike.likeType = "like",
+      existingLike.likeType = "like";
         existingLike.date_sent = new Date();
       interaction = await existingLike.save();
     } else {
@@ -69,7 +69,6 @@ export class InteractionService {
         isActive: true
       };
       const newMatch = await this.matchService.createMatch(matchDto);
-      //console.log(newMatch)
     }
     return interaction;
   }
