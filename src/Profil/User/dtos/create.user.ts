@@ -14,11 +14,10 @@ import {
   Max,
   IsObject,
 } from 'class-validator';
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export class CreateUserDto {
-
-  @ApiProperty({ example: '', description: "ID" })
+  @ApiProperty({ example: '', description: 'ID' })
   @IsString()
   @MinLength(2)
   @MaxLength(50)
@@ -397,5 +396,4 @@ export class CreateUserDto {
   @IsBoolean()
   @IsOptional()
   empty_account: boolean;
-
 }

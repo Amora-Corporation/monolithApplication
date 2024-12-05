@@ -1,14 +1,22 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { Reflector } from "@nestjs/core";
-import { IS_PUBLIC_KEY } from "../../common/decorators/public.decorator";
-import { IS_ADMIN_KEY } from "../../common/decorators/isAdmin.decorator";
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
+import { IS_ADMIN_KEY } from '../../common/decorators/isAdmin.decorator';
 import { Request } from 'express';
-import { IS_REFRESH_TOKEN_ROUTE } from "src/auth/common/decorators/refreshToken.decorator";
+import { IS_REFRESH_TOKEN_ROUTE } from 'src/auth/common/decorators/refreshToken.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+  constructor(
+    private jwtService: JwtService,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -19,10 +27,10 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const isRefreshTokenRoute = this.reflector.getAllAndOverride<boolean>(IS_REFRESH_TOKEN_ROUTE, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isRefreshTokenRoute = this.reflector.getAllAndOverride<boolean>(
+      IS_REFRESH_TOKEN_ROUTE,
+      [context.getHandler(), context.getClass()],
+    );
 
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
@@ -30,10 +38,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('No token provided');
     }
 
-
-
     try {
-      let payload ;
+      let payload;
       if (isRefreshTokenRoute) {
         payload = this.jwtService.decode(token);
       } else {
@@ -41,7 +47,11 @@ export class AuthGuard implements CanActivate {
           secret: process.env.JWT_SECRET_KEY,
         });
       }
-      if (!payload || typeof payload !== 'object' || !Array.isArray(payload.roles)) {
+      if (
+        !payload ||
+        typeof payload !== 'object' ||
+        !Array.isArray(payload.roles)
+      ) {
         throw new UnauthorizedException('Invalid token payload');
       }
 
@@ -55,11 +65,8 @@ export class AuthGuard implements CanActivate {
       if (isAdmin && !payload.roles.includes('admin')) {
         throw new UnauthorizedException('Admin access required');
       }
-
     } catch (error) {
-  
       if (isRefreshTokenRoute && error.name === 'JsonWebTokenError') {
-       
         return true;
       }
       throw new UnauthorizedException('Invalid token');

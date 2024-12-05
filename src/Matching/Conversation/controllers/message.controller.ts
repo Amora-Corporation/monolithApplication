@@ -1,11 +1,26 @@
-import { Body, Controller, Post, Get, Put, Delete, Param, NotFoundException } from "@nestjs/common";
-import { MessageService } from "../message.service";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from "@nestjs/swagger";
-import { Message } from "../schemas/message.schemas";
-import { CreateMessageDTO } from "../dtos/create.message";
-import { UpdateMessageDTO } from "../dtos/update.message";
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Param,
+  NotFoundException,
+} from '@nestjs/common';
+import { MessageService } from '../message.service';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiParam,
+} from '@nestjs/swagger';
+import { Message } from '../schemas/message.schemas';
+import { CreateMessageDTO } from '../dtos/create.message';
+import { UpdateMessageDTO } from '../dtos/update.message';
 
-@ApiTags("messaging")
+@ApiTags('messaging')
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
@@ -60,9 +75,12 @@ export class MessageController {
   @ApiBody({ type: UpdateMessageDTO })
   async update(
     @Param('id') id: string,
-    @Body() updateMessageDTO: UpdateMessageDTO
+    @Body() updateMessageDTO: UpdateMessageDTO,
   ): Promise<Message> {
-    const updatedMessage = await this.messageService.update(id, updateMessageDTO);
+    const updatedMessage = await this.messageService.update(
+      id,
+      updateMessageDTO,
+    );
     if (!updatedMessage) {
       throw new NotFoundException('Message not found');
     }

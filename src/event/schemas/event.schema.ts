@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type EventDocument = Event & Document;
@@ -31,4 +31,3 @@ export class Event {
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
-

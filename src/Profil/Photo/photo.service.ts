@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Photo, PhotoDocument } from "./schemas/photo.schema";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
-import { CreatePhotoDto } from "./dtos/create.photo";
-
+import { Photo, PhotoDocument } from './schemas/photo.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CreatePhotoDto } from './dtos/create.photo';
 
 @Injectable()
 export class PhotoService {
-  constructor(@InjectModel(Photo.name) private modelPhoto: Model<PhotoDocument>) {}
+  constructor(
+    @InjectModel(Photo.name) private modelPhoto: Model<PhotoDocument>,
+  ) {}
 
   async getAllPhotos(): Promise<Photo[]> {
     return this.modelPhoto.find().exec();

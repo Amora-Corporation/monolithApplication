@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString, IsMongoId } from "class-validator";
-import { Type } from "class-transformer";
-import { Types } from "mongoose";
+import { IsNotEmpty, IsString, IsMongoId } from 'class-validator';
+import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 
 export class CreateMessageDTO {
   @IsMongoId()

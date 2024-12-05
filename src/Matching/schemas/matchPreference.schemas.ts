@@ -1,7 +1,7 @@
-import { Document, Types } from "mongoose";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { User } from "../../Profil/User/schemas/user.schema";
-import { Gender } from "../../Profil/Gender/schemas/gender.schemas";
+import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { User } from '../../Profil/User/schemas/user.schema';
+import { Gender } from '../../Profil/Gender/schemas/gender.schemas';
 
 export type MatchPreferenceDocument = MatchPreference & Document;
 
@@ -56,4 +56,5 @@ export class MatchPreference {
   interestsPreference: string[];
 }
 
-export const MatchPreferenceSchema = SchemaFactory.createForClass(MatchPreference);
+export const MatchPreferenceSchema =
+  SchemaFactory.createForClass(MatchPreference);

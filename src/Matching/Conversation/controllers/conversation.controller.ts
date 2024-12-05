@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ConversationService } from '../conversation.service';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateConversationDto } from '../dtos/create.conversation';
 import { Conversation } from '../schemas/conversation.schema';
 
-@ApiTags("messaging")
+@ApiTags('messaging')
 @Controller('conversation')
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
@@ -23,7 +29,7 @@ export class ConversationController {
   }
 
   @Get()
-  @ApiOperation({summary:'retourner tout les conversations'})
+  @ApiOperation({ summary: 'retourner tout les conversations' })
   @ApiResponse({
     status: 200,
   })
@@ -31,16 +37,16 @@ export class ConversationController {
     return this.conversationService.getAllConversations();
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Obtenir une conversation par ID" })
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtenir une conversation par ID' })
   @ApiResponse({
     status: 200,
-    description: "Le conversation a été trouvé.",
+    description: 'Le conversation a été trouvé.',
     type: Conversation,
   })
-  @ApiResponse({ status: 404, description: "Conversation non trouvé" })
-  @ApiParam({ name: "id", description: "ID de la conversation" })
-  async getConversation(@Param("id") id: string): Promise<Conversation> {
+  @ApiResponse({ status: 404, description: 'Conversation non trouvé' })
+  @ApiParam({ name: 'id', description: 'ID de la conversation' })
+  async getConversation(@Param('id') id: string): Promise<Conversation> {
     return this.conversationService.getConversation(id);
   }
 }

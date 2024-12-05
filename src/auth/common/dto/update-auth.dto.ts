@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsEmail, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
 
 export class UpdateAuthDto {
   @ApiProperty({
@@ -25,5 +25,4 @@ export class UpdateAuthDto {
   @IsOptional()
   @IsOptional()
   refreshToken: string;
-
 }

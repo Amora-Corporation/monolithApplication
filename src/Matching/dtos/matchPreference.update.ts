@@ -1,6 +1,14 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested, Min, Max } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { Types } from 'mongoose';
 
 class DistanceDto {
   @IsNumber()
@@ -31,7 +39,6 @@ class HeightDto {
   @Max(250)
   max: number;
 }
-
 
 export class UpdateMatchPreferenceDto {
   @IsNotEmpty()

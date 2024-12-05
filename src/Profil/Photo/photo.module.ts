@@ -1,19 +1,16 @@
-import { Module } from "@nestjs/common";
-import { PhotoController } from "./photo.controller";
-import { PhotoService } from "./photo.service";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Photo, PhotoSchema } from "./schemas/photo.schema";
-import { JwtModule } from "@nestjs/jwt";
-
+import { Module } from '@nestjs/common';
+import { PhotoController } from './photo.controller';
+import { PhotoService } from './photo.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Photo, PhotoSchema } from './schemas/photo.schema';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports:[
+  imports: [
     JwtModule.register({}),
-    MongooseModule.forFeature([
-      { name: Photo.name, schema: PhotoSchema }
-    ])
+    MongooseModule.forFeature([{ name: Photo.name, schema: PhotoSchema }]),
   ],
   controllers: [PhotoController],
-  providers:[PhotoService]
+  providers: [PhotoService],
 })
 export class PhotoModule {}

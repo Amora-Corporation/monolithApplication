@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from "./Profil/User/user.module";
-import { PhotoModule } from "./Profil/Photo/photo.module";
-import { GenderModule } from "./Profil/Gender/gender.module";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { MongooseModule } from "@nestjs/mongoose";
-import { ProfilModule } from "./Profil/profil.module";
-import { Auth } from "./auth/auth-classique/schemas/auth.schema";
-import { AuthModule } from "./auth/auth.module";
-import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
-import { APP_FILTER } from "@nestjs/core";
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ProfilModule } from './Profil/profil.module';
+import { AuthModule } from './auth/auth.module';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import { APP_FILTER } from '@nestjs/core';
 import { EventModule } from './event/event.module';
 import { MatchingModule } from './Matching/matching.module';
-
 
 @Module({
   imports: [
@@ -32,10 +27,11 @@ import { MatchingModule } from './Matching/matching.module';
     EventModule,
     MatchingModule,
   ],
-  providers: [{
-    provide: APP_FILTER,
-    useClass: SentryGlobalFilter,
-    
-  }]
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
 })
 export class AppModule {}

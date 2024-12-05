@@ -1,23 +1,39 @@
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { Gender } from "./schemas/gender.schemas";
-import { GenderService } from "./gender.service";
-import { CreateGerderDTO } from "./dtos/gender.create";
-import { UpdateGenderDTO } from "./dtos/gender.update";
-import { AuthGuard } from "src/auth/auth-classique/guards/auth.guard";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { Gender } from './schemas/gender.schemas';
+import { GenderService } from './gender.service';
+import { CreateGerderDTO } from './dtos/gender.create';
+import { UpdateGenderDTO } from './dtos/gender.update';
+import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
 
-@ApiTags("gender")
-@Controller("gender")
+@ApiTags('gender')
+@Controller('gender')
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class GenderController {
   constructor(private readonly genderService: GenderService) {}
 
   @Get()
-  @ApiOperation({ summary: "Get genders" })
+  @ApiOperation({ summary: 'Get genders' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Tout les genders",
+    description: 'Tout les genders',
     type: [Gender], // Utilise un tableau pour représenter plusieurs genres
   })
   async getGenders(): Promise<Gender[]> {
@@ -25,10 +41,10 @@ export class GenderController {
   }
 
   @Post()
-  @ApiOperation({ summary: "Post gender" })
+  @ApiOperation({ summary: 'Post gender' })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: "Post gender",
+    description: 'Post gender',
     type: Gender,
   })
   @ApiBody({ type: CreateGerderDTO })
@@ -36,26 +52,26 @@ export class GenderController {
     return this.genderService.createGender(createGenderDto);
   }
 
-  @Patch(":id")
-  @ApiOperation({ summary: "Update gender by ID" })
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update gender by ID' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Update a gender",
+    description: 'Update a gender',
     type: Gender,
   })
   @ApiBody({ type: UpdateGenderDTO })
   async update(
     @Param('id') id: string,
-    @Body() updateGenderDto: UpdateGenderDTO
+    @Body() updateGenderDto: UpdateGenderDTO,
   ): Promise<Gender> {
     return this.genderService.updateGender(id, updateGenderDto);
   }
 
-  @Delete(":id")
-  @ApiOperation({ summary: "Delete gender by ID" })
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete gender by ID' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Delete a gender",
+    description: 'Delete a gender',
     type: Gender,
   })
   async delete(@Param('id') id: string): Promise<Gender> {

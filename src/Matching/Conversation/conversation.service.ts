@@ -1,14 +1,13 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Conversation,
   ConversationDocument,
 } from './schemas/conversation.schema';
-import { Model } from "mongoose";
+import { Model } from 'mongoose';
 import { CreateConversationDto } from './dtos/create.conversation';
-import { User, UserDocument } from "../../Profil/User/schemas/user.schema";
-
+import { User, UserDocument } from '../../Profil/User/schemas/user.schema';
 
 @Injectable()
 @ApiTags('Conversation')
@@ -24,14 +23,15 @@ export class ConversationService {
     createConversationDto: CreateConversationDto,
   ): Promise<Conversation> {
     const createdConversation = new this.conversationModel({
-        ...createConversationDto,
-      }
-    );
+      ...createConversationDto,
+    });
     const userIds = createdConversation.participants_ID;
-    const existingUsers= await this.userModel.find({ _id :{$in: userIds } }).exec();
+    const existingUsers = await this.userModel
+      .find({ _id: { $in: userIds } })
+      .exec();
 
     if (existingUsers.length !== userIds.length) {
-      throw new NotFoundException("il y'a un utilisateur qui m'existe pas")
+      throw new NotFoundException("il y'a un utilisateur qui m'existe pas");
     }
 
     return createdConversation.save();
@@ -44,7 +44,7 @@ export class ConversationService {
   async getConversation(id: string): Promise<Conversation | null> {
     const conversation = await this.conversationModel.findById(id).exec();
     if (!conversation) {
-      throw new NotFoundException("conversation ne existe pas")
+      throw new NotFoundException('conversation ne existe pas');
     }
     return conversation;
   }

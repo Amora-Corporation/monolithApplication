@@ -5,7 +5,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 @Injectable()
 export class EventService {
   create(createEventDto: CreateEventDto) {
-    return 'This action adds a new event';
+    return `This action adds a new event ${createEventDto}`;
   }
 
   findAll() {
@@ -17,7 +17,7 @@ export class EventService {
   }
 
   update(id: number, updateEventDto: UpdateEventDto) {
-    return `This action updates a #${id} event`;
+    return `This action updates a #${updateEventDto} event ${id}`;
   }
 
   remove(id: number) {

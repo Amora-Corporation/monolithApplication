@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import "./instrument";
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import './instrument';
 import { ConfigService } from '@nestjs/config';
 
 // Nouveau middleware personnalisé
@@ -14,7 +14,9 @@ function swaggerAuthMiddleware(configService: ConfigService) {
       const pass = configService.get<string>('SWAGGER_PASSWORD');
 
       const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-      const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+      const [login, password] = Buffer.from(b64auth, 'base64')
+        .toString()
+        .split(':');
 
       if (login && password && login === user && password === pass) {
         return next();
@@ -33,21 +35,20 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors();
-  
 
   // Appliquer le middleware d'authentification pour Swagger
   app.use('/api', swaggerAuthMiddleware(configService));
 
   const config = new DocumentBuilder()
     .setTitle("API de l'application de rencontre AuthService")
-    .setDescription("La documentation API pour notre application de rencontre")
+    .setDescription('La documentation API pour notre application de rencontre')
     .setVersion('1.0')
     .addTag('Auth Social Media')
     .addTag('Auth Classique')
     .addTag('User')
-    .addTag("matching")
+    .addTag('matching')
     .addBearerAuth()
-    .build()
+    .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
@@ -59,10 +60,11 @@ async function bootstrap() {
     useGlobalPrefix: true,
     swaggerUrl: '/swagger-json',
   });
-  
 
   await app.listen(3000);
-  console.log(`Swagger documentation is available at http://localhost:3000/api`);
+  console.log(
+    `Swagger documentation is available at http://localhost:3000/api`,
+  );
 }
 
 bootstrap();

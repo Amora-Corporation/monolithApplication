@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from "./schemas/user.schema";
-import { UserController } from "./user.controller";
-import { UserService } from "./user.service";
-import { JwtModule } from "@nestjs/jwt";
+import { User, UserSchema } from './schemas/user.schema';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -13,6 +13,6 @@ import { JwtModule } from "@nestjs/jwt";
   ],
   controllers: [UserController],
   providers: [UserService],
-  exports: [UserService]
+  exports: [UserService],
 })
 export class UserModule {}

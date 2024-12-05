@@ -1,6 +1,12 @@
-import { IsBoolean, IsDate, IsMongoId, IsNotEmpty, IsOptional } from "class-validator";
-import { Type } from "class-transformer";
-import { Types } from "mongoose";
+import {
+  IsBoolean,
+  IsDate,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 
 export class CreateMatchDto {
   @IsNotEmpty()

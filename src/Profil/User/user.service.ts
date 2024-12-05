@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from "mongoose";
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreateUserDto } from "./dtos/create.user";
-import { User, UserDocument } from "./schemas/user.schema";
+import { Model, Types } from 'mongoose';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateUserDto } from './dtos/create.user';
+import { User, UserDocument } from './schemas/user.schema';
 import { UpdateUserDto } from './dtos/update.user';
-
 
 @Injectable()
 export class UserService {
@@ -21,7 +20,6 @@ export class UserService {
     //console.log(createUserDto)
     const createdUser = new this.userModel(createUserDto);
     return createdUser.save();
-    
   }
 
   @ApiOperation({ summary: 'Obtenir tous les profils utilisateurs' })
@@ -49,18 +47,25 @@ export class UserService {
     return user;
   }
 
-    @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
-    @ApiResponse({ status: 200, description: 'Le profil a été mis à jour avec succès.', type: User })
-    @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
-    async update(id: Types.ObjectId, updateUserDto: UpdateUserDto): Promise<User> {
-      const updatedUser = await this.userModel
-        .findByIdAndUpdate(id, updateUserDto, { new: true })
-        .exec();
-      if (!updatedUser) {
-        throw new NotFoundException(`Profil avec l'ID ${id} non trouvé`);
-      }
-      return updatedUser;
+  @ApiOperation({ summary: 'Mettre à jour un profil utilisateur' })
+  @ApiResponse({
+    status: 200,
+    description: 'Le profil a été mis à jour avec succès.',
+    type: User,
+  })
+  @ApiResponse({ status: 404, description: 'Profil non trouvé.' })
+  async update(
+    id: Types.ObjectId,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+    if (!updatedUser) {
+      throw new NotFoundException(`Profil avec l'ID ${id} non trouvé`);
     }
+    return updatedUser;
+  }
 
   @ApiOperation({ summary: 'Supprimer un profil utilisateur' })
   @ApiResponse({

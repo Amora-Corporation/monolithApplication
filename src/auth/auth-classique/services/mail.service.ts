@@ -14,7 +14,6 @@ export class MailService {
       },
     });
   }
-  
 
   async sendOtpEmail(email: string, otp: string) {
     const mailOptions = {
@@ -28,7 +27,7 @@ export class MailService {
       await this.transporter.sendMail(mailOptions);
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
+      console.error("Erreur lors de l'envoi de l'e-mail:", error);
       return { success: false };
     }
   }
