@@ -14,8 +14,8 @@ import { IS_REFRESH_TOKEN_ROUTE } from 'src/auth/common/decorators/refreshToken.
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
-    private reflector: Reflector,
+    private readonly jwtService: JwtService,
+    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 @Injectable()
 export class AuthsocialMediaService {
   constructor(
-    @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
     private readonly authService: AuthService,
   ) {}
 

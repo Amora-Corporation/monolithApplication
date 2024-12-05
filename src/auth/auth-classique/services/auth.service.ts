@@ -26,7 +26,7 @@ import { User } from 'src/Profil/User/schemas/user.schema';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(Auth.name) private authModel: Model<AuthDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -35,7 +35,7 @@ export class AuthService {
     otplib.authenticator.options = { step: 10 };
   }
 
-  private tempsMails = new Map<string, { password: string; otp: string }>();
+  private readonly tempsMails = new Map<string, { password: string; otp: string }>();
 
   async signUp(inscriptionDto: InscriptionDto): Promise<any> {
     try {
@@ -63,7 +63,6 @@ export class AuthService {
           createdAuth.email,
           createdAuth.roles,
         );
-        //await this.updateRefreshToken(createdAuth._id, tokens.refreshToken);
         const createdUser = await this.userService.create({
           _id: createdAuth._id,
           email: createdAuth.email,
@@ -150,7 +149,6 @@ export class AuthService {
       validatedAuthUser.email,
       validatedAuthUser.roles,
     );
-    //await this.updateRefreshToken(validatedAuthUser._id, tokens.refreshToken);
     return {
       ...tokens,
       User: validatedUser,
@@ -205,7 +203,6 @@ export class AuthService {
         }
       }
 
-      //const hashedPassword = await this.hashData(insCoDto.password);
       console.log('insCoDto.password' + insCoDto.password);
       const otp = otplib.authenticator.generate(insCoDto.password);
       console.log(otp);
@@ -234,7 +231,6 @@ export class AuthService {
     }
 
     const isOtpValid = otp === tempData.otp;
-    //const isOtpValid = otplib.authenticator.check(otp, tempData.password);
     console.log('otp' + otp);
     console.log('tempDataOtp' + tempData.otp);
     console.log('password' + tempData.password);
@@ -366,7 +362,6 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
       const tokens = await this.getTokens(user._id, user.email, user.roles);
-      //await this.updateRefreshToken(payload.sub, tokens.refreshToken);
       return tokens;
     } catch (error) {
       console.error('Token refresh error:', error);
