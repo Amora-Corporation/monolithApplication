@@ -5,7 +5,7 @@ import {
   Conversation,
   ConversationDocument,
 } from './schemas/conversation.schema';
-import { Model, Types } from "mongoose";
+import { Model } from "mongoose";
 import { CreateConversationDto } from './dtos/create.conversation';
 import { User, UserDocument } from "../../Profil/User/schemas/user.schema";
 
@@ -15,9 +15,9 @@ import { User, UserDocument } from "../../Profil/User/schemas/user.schema";
 export class ConversationService {
   constructor(
     @InjectModel(Conversation.name)
-    private conversationModel: Model<ConversationDocument>,
+    private readonly conversationModel: Model<ConversationDocument>,
     @InjectModel(User.name)
-    private userModel: Model<UserDocument>,
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
   async create(

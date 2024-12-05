@@ -16,7 +16,7 @@ export class Match{
   matchDate: Date;
 
   @Prop({ type: Boolean, required: true, default: true })
-  isActive: Boolean;
+  isActive: boolean;
 }
 
 export const MatchSchema = SchemaFactory.createForClass(Match);
