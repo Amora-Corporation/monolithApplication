@@ -7,7 +7,7 @@ import { CreatePhotoDto } from './dtos/create.photo';
 @Injectable()
 export class PhotoService {
   constructor(
-    @InjectModel(Photo.name) private modelPhoto: Model<PhotoDocument>,
+    @InjectModel(Photo.name) private readonly modelPhoto: Model<PhotoDocument>,
   ) {}
 
   async getAllPhotos(): Promise<Photo[]> {

@@ -12,7 +12,7 @@ import { UpdateMatchPreferenceDto } from './dtos/matchPreference.update';
 export class MatchPreferenceService {
   constructor(
     @InjectModel(MatchPreference.name)
-    private matchPreferenceModel: Model<MatchPreferenceDocument>,
+    private readonly matchPreferenceModel: Model<MatchPreferenceDocument>,
   ) {}
 
   async createMatchPreference(

@@ -98,7 +98,7 @@ export class InteractionService {
     });
 
     if (existingDislike) {
-      (existingDislike.likeType = 'dislike'),
+      (existingDislike.likeType = 'dislike');
         (existingDislike.date_sent = new Date());
       return await existingDislike.save();
     } else {

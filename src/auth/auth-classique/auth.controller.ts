@@ -36,7 +36,7 @@ export class AuthController {
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
-  private otpSecrets = new Map<string, string>();
+  private readonly otpSecrets = new Map<string, string>();
 
   @Post('SignInOrUp')
   @ApiOperation({ summary: 'Sign in or sign up a user' })

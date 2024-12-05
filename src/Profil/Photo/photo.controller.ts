@@ -103,8 +103,6 @@ export class PhotoController {
   async deletePhoto(@Param('id') id: string): Promise<void> {
     const result = await this.photoService.deletePhoto(id);
     return result;
-    // if (!result) {
-    //   throw new NotFoundException('Photo not found');
-    // }
+   
   }
 }

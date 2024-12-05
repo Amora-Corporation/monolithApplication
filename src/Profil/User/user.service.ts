@@ -8,7 +8,7 @@ import { UpdateUserDto } from './dtos/update.user';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
   @ApiOperation({ summary: 'Créer un nouveau profil utilisateur' })
   @ApiResponse({
     status: 201,

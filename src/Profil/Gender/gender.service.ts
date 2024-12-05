@@ -6,7 +6,7 @@ import { UpdateGenderDTO } from './dtos/gender.update';
 
 export class GenderService {
   constructor(
-    @InjectModel(Gender.name) private genderModel: Model<GenderDocument>,
+    @InjectModel(Gender.name) private readonly genderModel: Model<GenderDocument>,
   ) {}
   async getAllGenders(): Promise<Gender[]> {
     return this.genderModel.find().exec();
