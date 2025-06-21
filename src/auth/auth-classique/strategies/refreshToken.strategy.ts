@@ -13,11 +13,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: process.env.JWT_REFRESH_SECRET_KEY,
-      passReqToRequest: true,
     });
   }
 
-  validate(req: Request, payload: any) {
+  validate(payload: any, req: Request) {
     const refreshToken = req.get('Authorization').replace('Bearer ', '').trim();
     return { ...payload, refreshToken };
   }
