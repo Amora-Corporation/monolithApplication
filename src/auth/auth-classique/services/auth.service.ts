@@ -21,12 +21,29 @@ import * as otplib from 'otplib';
 import { MailService } from './mail.service';
 import { ForgotPasswordDto } from 'src/auth/common/dto/forgot-password.dto';
 import { randomInt } from 'crypto';
-import { User } from 'src/Profil/User/schemas/user.schema';
-
+import { User, UserDocument } from 'src/Profil/User/schemas/user.schema';
+import { TokenDto } from 'src/auth/common/dto/token.dto';
 @Injectable()
 export class AuthService {
+  private readonly tempsMails = new Map<
+    string,
+    { password: string; otp: string; expiresAt: Date }
+  >();
+
+  private readonly OTP_EXPIRATION_MINUTES = 10;
+  private readonly MAX_LOGIN_ATTEMPTS = 5;
+  private readonly LOGIN_ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes
+
+  private readonly loginAttempts = new Map<
+    string,
+    { count: number; lastAttempt: Date }
+  >();
+
+  
+
   constructor(
-    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<Auth>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -35,188 +52,157 @@ export class AuthService {
     otplib.authenticator.options = { step: 10 };
   }
 
-  private readonly tempsMails = new Map<string, { password: string; otp: string }>();
-
   async signUp(inscriptionDto: InscriptionDto): Promise<any> {
+    const userExists = await this.authModel.findOne({ email: inscriptionDto.email });
+
+    if (userExists) {
+      throw new BadRequestException('Cet utilisateur existe déjà');
+    }
+
+    const hashedPassword = await this.hashData(inscriptionDto.password);
+    const newUserId = new Types.ObjectId();
+
+    const createdAuth = new this.authModel({
+      _id: newUserId,
+      ...inscriptionDto,
+      password: hashedPassword,
+    });
+
+    let savedAuth = null;
+    let savedUser = null;
+
     try {
-      const userExists = await this.authModel.findOne({
-        email: inscriptionDto.email,
-      });
-      if (userExists) {
-        throw new BadRequestException('User already exists');
-      }
+      savedAuth = await createdAuth.save();
 
-      // Hacher le mot de passe et créer l'auth
-      const hashedPassword = await this.hashData(inscriptionDto.password);
-      const createdAuth = new this.authModel({
-        _id: new Types.ObjectId(),
-        ...inscriptionDto,
-        password: hashedPassword,
+      const user = await this.userModel.create({
+        _id: createdAuth._id,
+        email: createdAuth.email,
       });
 
-      await createdAuth.save();
-      try {
-        // Générer les tokens
+      savedUser = await user.save();
 
-        const tokens = await this.getTokens(
-          createdAuth._id,
-          createdAuth.email,
-          createdAuth.roles,
-        );
-        const createdUser = await this.userService.create({
-          _id: createdAuth._id,
-          email: createdAuth.email,
-          age_range: { max: 0, min: 0 },
-          bio: '',
-          birthdate: undefined,
-          children: '',
-          deal_breakers: [],
-          dietary_preferences: [],
-          dream_vacation: '',
-          drinker: '',
-          education: '',
-          ethnicity: '',
-          exercise_frequency: '',
-          favorite_movies: [],
-          favorite_music: [],
-          favorite_tv_shows: [],
-          first_name: '',
-          gender_ID: 0,
-          height: 0,
-          hobbies: [],
-          interested_genre: [],
-          interests: [],
-          languages: [],
-          last_name: '',
-          location: '',
-          looking_for: '',
-          nickname: '',
-          occupation: '',
-          personality_type: '',
-          pets: [],
-          photos: [],
-          political_views: '',
-          popularity: 0,
-          preferred_communication_style: [],
-          preferred_distance_range: { max: 0, min: 0 },
-          relationship_status: '',
-          religion: '',
-          smoker: false,
-          social_media_links: {},
-          travel_frequency: '',
-          vaccination_status: '',
-          verification_status: false,
-          verified_photos: false,
-          weight: 0,
-          work_life_balance: '',
-          zodiac_sign: '',
-          empty_account: true,
-        });
-        return { ...tokens, User: createdUser };
-      } catch (error) {
-        await this.authModel.findByIdAndDelete(createdAuth._id);
-        throw new InternalServerErrorException(
-          "Une erreur interne est survenue lors de la création de l'utilisateur",
-          { cause: error },
-        );
-      }
+      const tokenDto: TokenDto = {
+        _id: savedAuth._id.toString(),
+        email: savedAuth.email,
+        roles: savedAuth.roles,
+      };
+
+      const tokens = await this.getTokens(tokenDto);
+
+      return tokens;
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
+      if (savedAuth && !savedUser) {
+        await this.authModel.findByIdAndDelete(savedAuth._id);
+      }
+
+      if (savedUser && !savedAuth) {
+        await this.userModel.findByIdAndDelete(savedUser._id);
       }
 
       throw new InternalServerErrorException(
-        'Une erreur interne est survenue',
-        error,
+        "Erreur lors de la création de l'utilisateur",
+        { cause: error },
       );
     }
   }
 
   async signIn(
     connexionDto: ConnexionDto,
-  ): Promise<{ accessToken: string; refreshToken: string; User: User }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const attempts = this.loginAttempts.get(connexionDto.email);
+
+    if (attempts && attempts.count >= this.MAX_LOGIN_ATTEMPTS) {
+      const timeSinceLast = Date.now() - attempts.lastAttempt.getTime();
+
+      if (timeSinceLast < this.LOGIN_ATTEMPT_WINDOW) {
+        const remaining = Math.ceil((this.LOGIN_ATTEMPT_WINDOW - timeSinceLast) / 60000);
+        throw new UnauthorizedException(
+          `Trop de tentatives. Réessayez dans ${remaining} minutes.`,
+        );
+      }
+
+      this.loginAttempts.delete(connexionDto.email);
+    }
+
     const validatedAuthUser = await this.validateUser(
       connexionDto.email,
       connexionDto.password,
     );
-    if (!validatedAuthUser) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    const validatedUser = await this.userService.findOne(validatedAuthUser._id);
 
-    const tokens = await this.getTokens(
-      validatedAuthUser._id,
-      validatedAuthUser.email,
-      validatedAuthUser.roles,
-    );
-    return {
-      ...tokens,
-      User: validatedUser,
+    if (!validatedAuthUser) {
+      const current = this.loginAttempts.get(connexionDto.email) || { count: 0, lastAttempt: new Date() };
+      this.loginAttempts.set(connexionDto.email, {
+        count: current.count + 1,
+        lastAttempt: new Date(),
+      });
+
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+
+    this.loginAttempts.delete(connexionDto.email);
+
+    const validatedUser = await this.userService.findOne(validatedAuthUser._id);
+    if (!validatedUser) {
+      throw new NotFoundException('Profil utilisateur non trouvé');
+    }
+    const tokenDto: TokenDto = {  
+      _id: validatedAuthUser._id.toString(),
+      email: validatedAuthUser.email,
+      roles: validatedAuthUser.roles,
     };
+    const tokens = await this.getTokens(tokenDto);
+
+    await this.authModel.findByIdAndUpdate(validatedAuthUser._id, {
+      lastLogin: new Date(),
+    });
+
+    return tokens;
   }
 
   async findAll(): Promise<Auth[]> {
     return this.authModel.find().exec();
   }
+
   async findOne(id: string): Promise<Auth> {
-    const auth = await this.authModel.findById(id).exec();
-    if (!auth) {
-      throw new NotFoundException(`Auth with ID "${id}" not found`);
+    try {
+      const auth = await this.authModel.findById(new Types.ObjectId(id)).exec();
+      if (!auth) {
+        throw new NotFoundException(`Utilisateur avec l'ID "${id}" non trouvé`);
+      }
+      return auth;
+    } catch (error) {
+      throw new NotFoundException(`Erreur lors de la recherche de l'utilisateur avec l'ID "${id}": ${error.message}`);
     }
-    return auth;
   }
+
   async update(id: string, updateAuthDto: UpdateAuthDto): Promise<Auth> {
     if (updateAuthDto.password) {
       updateAuthDto.password = await bcrypt.hash(updateAuthDto.password, 10);
     }
+
     const updatedAuth = await this.authModel
       .findByIdAndUpdate(id, updateAuthDto, { new: true })
       .exec();
+
     if (!updatedAuth) {
-      throw new NotFoundException(`Auth with ID "${id}" not found`);
+      throw new NotFoundException(`Utilisateur avec l'ID "${id}" non trouvé`);
     }
+
     return updatedAuth;
   }
 
-  // async remove(id: string): Promise<Auth> {
-  //   const deletedAuth = await this.authModel.findByIdAndDelete(id).exec();
-  //   if (!deletedAuth) {
-  //     throw new NotFoundException(`Auth with ID "${id}" not found`);
-  //   }
-  //   return deletedAuth;
-  // }
-  async signInOrUp(insCoDto: InscriptionDto) {
-    //:
-    //Promise<{ accessToken: string; refreshToken: string; isEmptyAccount: boolean }>
-    try {
-      const existingUser = await this.authModel
-        .findOne({ email: insCoDto.email })
-        .exec();
+  async signInOrUp(
+    insCoDto: InscriptionDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    console.log("insCoDto.email", insCoDto.email);
+    const existingUser = await this.authModel.findOne({ email: insCoDto.email });
 
-      if (existingUser) {
-        const isPasswordValid = await bcrypt.compare(
-          insCoDto.password,
-          existingUser.password,
-        );
-        if (!isPasswordValid) {
-          throw new UnauthorizedException('Invalid password');
-        }
-      }
-
-      console.log('insCoDto.password' + insCoDto.password);
-      const otp = otplib.authenticator.generate(insCoDto.password);
-      console.log(otp);
-      this.sendOtp(insCoDto.email, otp);
-      this.tempsMails.set(insCoDto.email, { password: insCoDto.password, otp });
-
-      return {
-        message:
-          'OTP envoyé à votre adresse e-mail. Veuillez vérifier pour continuer.',
-      };
-    } catch (error) {
-      console.error('Error in signInOrUp:', error);
-      throw new InternalServerErrorException('Une erreur interne est survenue');
+    if (existingUser) {
+      await this.validateUser(insCoDto.email, insCoDto.password);
+      return this.signIn(insCoDto);
     }
+
+    return this.signUp(insCoDto);
   }
 
   async verifyOtp(
@@ -224,76 +210,68 @@ export class AuthService {
     otp: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const tempData = this.tempsMails.get(email);
+
     if (!tempData) {
-      throw new BadRequestException(
-        'Aucune tentative de connexion trouvée pour cet e-mail.',
-      );
+      throw new BadRequestException('Aucune tentative trouvée pour cet e-mail.');
     }
 
-    const isOtpValid = otp === tempData.otp;
-    console.log('otp' + otp);
-    console.log('tempDataOtp' + tempData.otp);
-    console.log('password' + tempData.password);
+    if (new Date() > tempData.expiresAt) {
+      this.tempsMails.delete(email);
+      throw new UnauthorizedException('OTP expiré. Veuillez réessayer.');
+    }
 
-    if (!isOtpValid) {
+    if (otp !== tempData.otp) {
       throw new UnauthorizedException('OTP invalide');
     }
-    // Si l'OTP est valide, générer les tokens
-    const existingUser = await this.authModel.findOne({ email }).exec();
-    if (existingUser) {
-      this.tempsMails.delete(email);
-      return await this.signIn({ email, password: tempData.password });
-    } else {
-      this.tempsMails.delete(email);
-      return await this.signUp({ email, password: tempData.password });
+
+    this.tempsMails.delete(email);
+
+    const user = await this.authModel.findOne({ email });
+    if (user) {
+      return this.signIn({ email, password: tempData.password });
     }
+
+    return this.signUp({ email, password: tempData.password });
   }
 
   async findByEmail(email: string): Promise<Auth> {
-    const auth = await this.authModel.findOne({ email: email }).exec();
+    const auth = await this.authModel.findOne({ email }).exec();
     if (!auth) {
-      throw new NotFoundException(`Auth with username "${email}" not found`);
+      throw new NotFoundException(`Utilisateur avec l'email "${email}" non trouvé`);
     }
     return auth;
   }
 
   async validateUser(username: string, password: string): Promise<Auth | null> {
-    const user = await this.findByEmail(username);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      return user;
+    const userAuth = await this.findByEmail(username);
+
+    if (userAuth.isBlocked) {
+      throw new UnauthorizedException('Compte bloqué. Contactez le support.');
     }
-    return null;
+
+    const isValid = await bcrypt.compare(password, userAuth.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Mot de passe invalide');
+    }
+
+    return userAuth;
   }
 
-  hashData(data: string) {
+  async hashData(data: string): Promise<string> {
     return bcrypt.hash(data, 10);
   }
 
-  // async updateRefreshToken(userId: Types.ObjectId, refreshToken: string) {
-  //   const hashedRefreshToken = await this.hashData(refreshToken);
-  //   await this.authModel.findByIdAndUpdate(userId, {
-  //     refreshToken: hashedRefreshToken
-  //   });
-  // }
-
-  async getTokens(userId: Types.ObjectId, email: string, roles: string[]) {
+  async getTokens(tokenDto: TokenDto) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        {
-          sub: userId.toHexString(),
-          email: email,
-          roles: roles,
-        },
+        { _id: tokenDto._id, email: tokenDto.email, roles: tokenDto.roles },
         {
           secret: this.configService.get<string>('JWT_SECRET_KEY'),
-          expiresIn: '15m',
+          expiresIn: '2h',
         },
       ),
       this.jwtService.signAsync(
-        {
-          sub: userId.toHexString(),
-          email,
-        },
+        { _id: tokenDto._id, email: tokenDto.email , roles: tokenDto.roles},
         {
           secret: this.configService.get<string>('JWT_REFRESH_SECRET_KEY'),
           expiresIn: '7d',
@@ -301,71 +279,70 @@ export class AuthService {
       ),
     ]);
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
-
-  // generateOtp() {
-  //   console.log(otplib.authenticator.generateSecret())
-  //   return otplib.authenticator.generate(otplib.authenticator.generateSecret());
-  // }
-
-  // verifyOtpCode(otp: string, secret: string) {
-  //   return otplib.authenticator.check(otp, secret);
-  // }
 
   async sendOtp(email: string, otp: string) {
     const result = await this.mailService.sendOtpEmail(email, otp);
     if (!result.success) {
       throw new UnauthorizedException("Erreur lors de l'envoi de l'OTP");
     }
+
     return { message: 'OTP envoyé par email' };
   }
 
   async forgotPassword(forgotPasswordDTO: ForgotPasswordDto) {
-    const existingUser = await this.authModel
-      .findOne({ email: forgotPasswordDTO.email })
-      .exec();
+    const existingUser = await this.authModel.findOne({ email: forgotPasswordDTO.email });
 
     if (!existingUser) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      return { message: 'Si cet email existe, un OTP a été envoyé' };
     }
+
     const secret = randomInt(100000, 999999).toString();
     const otp = otplib.authenticator.generate(secret);
 
-    // Sauvegardez l'OTP dans la base de données ou un cache avec une durée de validité
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + this.OTP_EXPIRATION_MINUTES);
+
     this.tempsMails.set(forgotPasswordDTO.email, {
       password: secret,
-      otp: otp,
+      otp,
+      expiresAt,
     });
-    // Envoyez l'OTP par email
+
     await this.sendOtp(forgotPasswordDTO.email, otp);
 
-    return { message: 'OTP sent successfully' };
+    return {
+      message: 'OTP envoyé avec succès',
+      expiresIn: `${this.OTP_EXPIRATION_MINUTES} minutes`,
+    };
   }
 
   async refreshToken(token: string) {
     try {
-      // Décodez le token pour obtenir le payload sans vérifier la signature
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET_KEY'),
       });
 
       if (!payload || typeof payload !== 'object') {
-        throw new UnauthorizedException('Invalid token payload');
+        throw new UnauthorizedException('Payload du token invalide');
       }
+
       const userId = new Types.ObjectId(payload.sub);
       const user = await this.authModel.findById(userId);
+
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        throw new UnauthorizedException('Utilisateur non trouvé');
       }
-      const tokens = await this.getTokens(user._id, user.email, user.roles);
-      return tokens;
+      const tokenDto: TokenDto = {
+        _id: user._id.toString(),
+        email: user.email,
+        roles: user.roles,
+      };
+      return this.getTokens(tokenDto);
     } catch (error) {
-      console.error('Token refresh error:', error);
-      throw new UnauthorizedException('Invalid or expired token');
+      console.error('Erreur de rafraîchissement du token:', error);
+      throw new UnauthorizedException('Token invalide ou expiré');
     }
   }
 }

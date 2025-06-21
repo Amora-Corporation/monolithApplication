@@ -23,8 +23,11 @@ import { MatchPreference } from '../schemas/matchPreference.schemas';
 import { CreateMatchPreferenceDto } from '../dtos/matchPreference.create';
 import { UpdateMatchPreferenceDto } from '../dtos/matchPreference.update';
 import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
+import { CurrentUser } from 'src/auth/common/decorators/currentUser.decorator';
+import { TokenDto } from 'src/auth/common/dto/token.dto';
+import { Admin } from 'src/auth/common/decorators/isAdmin.decorator';
 
-@ApiTags('matching')
+@ApiTags('matchingPreference')
 @Controller('matchingPreference')
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
@@ -33,50 +36,46 @@ export class MatchPreferenceController {
     private readonly matchPreferenceService: MatchPreferenceService,
   ) {}
 
-  @Post()
+  @Post('me')
   @ApiOperation({ summary: 'Create new match preference' })
   @ApiResponse({ status: HttpStatus.CREATED, type: MatchPreference })
   @ApiBody({ type: CreateMatchPreferenceDto })
   async createMatchPreference(
     @Body() createMatchPreferenceDto: CreateMatchPreferenceDto,
+    @CurrentUser() user: TokenDto,
   ): Promise<MatchPreference> {
     return this.matchPreferenceService.createMatchPreference(
       createMatchPreferenceDto,
+      user
     );
   }
 
   @Get()
+  @Admin()
   @ApiOperation({ summary: 'Get all match preferences' })
   @ApiResponse({ status: HttpStatus.OK, type: [MatchPreference] })
   async getAllMatchPreferences(): Promise<MatchPreference[]> {
     return this.matchPreferenceService.getAllMatchPreferences();
   }
 
-  @Get(':id')
+  @Get('me')
   @ApiOperation({ summary: 'Get a match preference by ID' })
   @ApiResponse({ status: HttpStatus.OK, type: MatchPreference })
-  @ApiParam({ name: 'id', type: 'string' })
-  async getMatchPreference(@Param('id') id: string): Promise<MatchPreference> {
-    const matchPreference =
-      await this.matchPreferenceService.getMatchPreferenceById(id);
-    if (!matchPreference) {
-      throw new NotFoundException('Match preference not found');
-    }
-    return matchPreference;
+  async getMatchPreference(@CurrentUser() user: TokenDto): Promise<MatchPreference> {
+    return this.matchPreferenceService.getMatchPreferenceById(user._id);
   }
 
-  @Put(':id')
+  @Put('me')
   @ApiOperation({ summary: 'Update a match preference' })
   @ApiResponse({ status: HttpStatus.OK, type: MatchPreference })
-  @ApiParam({ name: 'id', type: 'string' })
   @ApiBody({ type: UpdateMatchPreferenceDto })
   async updateMatchPreference(
-    @Param('id') id: string,
+    @CurrentUser() user: TokenDto,
     @Body() updateMatchPreferenceDto: UpdateMatchPreferenceDto,
   ): Promise<MatchPreference> {
     const updatedMatchPreference =
       await this.matchPreferenceService.updateMatchPreference(
-        id,
+        user._id,
         updateMatchPreferenceDto,
       );
     if (!updatedMatchPreference) {
@@ -85,15 +84,14 @@ export class MatchPreferenceController {
     return updatedMatchPreference;
   }
 
-  @Delete(':id')
+  @Delete('me')
   @ApiOperation({ summary: 'Delete a match preference' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Match preference deleted successfully',
   })
-  @ApiParam({ name: 'id', type: 'string' })
-  async deleteMatchPreference(@Param('id') id: string): Promise<void> {
-    const result = await this.matchPreferenceService.deleteMatchPreference(id);
+  async deleteMatchPreference(@CurrentUser() user: TokenDto): Promise<void> {
+    const result = await this.matchPreferenceService.deleteMatchPreference(user._id);
     if (!result) {
       throw new NotFoundException('Match preference not found');
     }

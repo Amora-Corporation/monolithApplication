@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import './instrument';
+import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
 
 // Nouveau middleware personnalisé
@@ -40,13 +40,13 @@ async function bootstrap() {
   app.use('/api', swaggerAuthMiddleware(configService));
 
   const config = new DocumentBuilder()
-    .setTitle("API de l'application de rencontre AuthService")
+    .setTitle("Application de rencontre")
     .setDescription('La documentation API pour notre application de rencontre')
     .setVersion('1.0')
-    .addTag('Auth Social Media')
-    .addTag('Auth Classique')
-    .addTag('User')
-    .addTag('matching')
+    // .addTag('Auth Social Media')
+    // .addTag('Auth Classique')
+    // .addTag('User')
+    // .addTag('matching')
     .addBearerAuth()
     .build();
 
@@ -61,9 +61,10 @@ async function bootstrap() {
     swaggerUrl: '/swagger-json',
   });
 
-  await app.listen(3000);
+  fs.writeFileSync('./swagger-spec.json', JSON.stringify(document));
+  await app.listen(3002);
   console.log(
-    `Swagger documentation is available at http://localhost:3000/api`,
+    `Swagger documentation is available at http://localhost:3002/api`,
   );
 }
 

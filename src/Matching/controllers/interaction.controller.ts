@@ -22,6 +22,9 @@ import { Interaction } from '../schemas/Interaction.schemas';
 import { CreateInteractionDto } from '../dtos/Interaction.create';
 import { UpdateInteractionDto } from '../dtos/Interaction.update';
 import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
+import { CurrentUser } from 'src/auth/common/decorators/currentUser.decorator';
+import { TokenDto } from 'src/auth/common/dto/token.dto';
+import { Admin } from 'src/auth/common/decorators/isAdmin.decorator';
 
 @ApiTags('matching')
 @Controller('Interaction')
@@ -30,27 +33,19 @@ import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
 export class InteractionController {
   constructor(private readonly interactionService: InteractionService) {}
 
-  @Post('Like')
+  @Post()
   @ApiOperation({ summary: 'Envoyer un like' })
   @ApiResponse({ status: 201, type: Interaction })
   @ApiBody({ type: CreateInteractionDto })
   async createLike(
+    @CurrentUser() user: TokenDto,
     @Body() createLikeDto: CreateInteractionDto,
   ): Promise<Interaction> {
-    return this.interactionService.createLikes(createLikeDto);
-  }
-
-  @Post('Nope')
-  @ApiOperation({ summary: 'Envoyer un nope' })
-  @ApiResponse({ status: 201, type: Interaction })
-  @ApiBody({ type: CreateInteractionDto })
-  async createNope(
-    @Body() createNopeDto: CreateInteractionDto,
-  ): Promise<Interaction> {
-    return this.interactionService.createDislikes(createNopeDto);
+    return this.interactionService.createInteration(createLikeDto, user);
   }
 
   @Get()
+  @Admin()
   @ApiOperation({ summary: 'Obtenir toutes les interactions' })
   @ApiResponse({ status: 200, type: [Interaction] })
   async getAllInteractions(): Promise<Interaction[]> {

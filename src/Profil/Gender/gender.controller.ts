@@ -21,7 +21,7 @@ import { GenderService } from './gender.service';
 import { CreateGerderDTO } from './dtos/gender.create';
 import { UpdateGenderDTO } from './dtos/gender.update';
 import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
-
+import { Public } from 'src/auth/common/decorators/public.decorator';
 @ApiTags('gender')
 @Controller('gender')
 @UseGuards(AuthGuard)
@@ -30,6 +30,7 @@ export class GenderController {
   constructor(private readonly genderService: GenderService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Get genders' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -48,6 +49,7 @@ export class GenderController {
     type: Gender,
   })
   @ApiBody({ type: CreateGerderDTO })
+  @Public()
   async create(@Body() createGenderDto: CreateGerderDTO): Promise<Gender> {
     return this.genderService.createGender(createGenderDto);
   }

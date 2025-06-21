@@ -31,51 +31,86 @@ export class AuthGuard implements CanActivate {
       IS_REFRESH_TOKEN_ROUTE,
       [context.getHandler(), context.getClass()],
     );
-
-    const request = context.switchToHttp().getRequest();
+   
+    const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
+    // console.log("Token extrait:", token ? "Présent" : "Absent");
+    
     if (!token) {
-      throw new UnauthorizedException('No token provided');
+      throw new UnauthorizedException('Token non fourni dans l\'en-tête Authorization');
     }
 
+    if (!process.env.JWT_SECRET_KEY) {
+      // console.error("JWT_SECRET_KEY n'est pas défini dans les variables d'environnement");
+      throw new UnauthorizedException('Configuration du serveur invalide');
+    }
+
+    let userPayload: any;
     try {
-      let payload;
       if (isRefreshTokenRoute) {
-        payload = this.jwtService.decode(token);
+        // console.log("Route de refresh token détectée, décodage du token sans vérification");
+        userPayload = this.jwtService.decode(token);
       } else {
-        payload = await this.jwtService.verifyAsync(token, {
+        // console.log("Vérification du token avec JWT_SECRET_KEY");
+        userPayload = await this.jwtService.verifyAsync(token, {
           secret: process.env.JWT_SECRET_KEY,
         });
       }
-      if (
-        !payload ||
-        typeof payload !== 'object' ||
-        !Array.isArray(payload.roles)
-      ) {
-        throw new UnauthorizedException('Invalid token payload');
+      
+      // console.log("Payload du token:", JSON.stringify(userPayload, null, 2));
+
+      if (!userPayload) {
+        throw new UnauthorizedException('Token vide ou invalide');
       }
 
-      request['auth'] = payload;
+      if (typeof userPayload !== 'object') {
+        throw new UnauthorizedException('Format du token invalide');
+      }
+
+      if (!Array.isArray(userPayload.roles)) {
+        throw new UnauthorizedException('Roles manquants dans le token');
+      }
+
+      request['user'] = userPayload;
 
       const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_ADMIN_KEY, [
         context.getHandler(),
         context.getClass(),
       ]);
 
-      if (isAdmin && !payload.roles.includes('admin')) {
+      if (isAdmin && !userPayload.roles.includes('Admin')) {
+
         throw new UnauthorizedException('Admin access required');
       }
     } catch (error) {
+      // console.error("Erreur lors de la vérification du token:", error.message);
       if (isRefreshTokenRoute && error.name === 'JsonWebTokenError') {
+        // console.log("Route de refresh token - autorisation accordée malgré l'erreur JWT");
         return true;
       }
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(`Token invalide: ${error.message}`);
     }
     return true;
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    const authHeader = request.headers.authorization;
+    // console.log("En-tête Authorization complet:", authHeader);
+
+    if (!authHeader) {
+      // console.log("Pas d'en-tête Authorization trouvé");
+      return undefined;
+    }
+
+    const [type, token] = authHeader.split(' ');
+    // console.log("Type d'authentification:", type);
+    // console.log("Token brut:", token ? "Présent" : "Absent");
+
+    if (type !== 'Bearer' || !token) {
+      // console.log("Format d'authentification invalide - doit être 'Bearer <token>'");
+      return undefined;
+    }
+
+    return token;
   }
 }

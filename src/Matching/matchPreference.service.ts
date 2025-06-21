@@ -3,32 +3,59 @@ import {
   MatchPreference,
   MatchPreferenceDocument,
 } from './schemas/matchPreference.schemas';
-import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import { Model, Types } from 'mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMatchPreferenceDto } from './dtos/matchPreference.create';
 import { UpdateMatchPreferenceDto } from './dtos/matchPreference.update';
+import { TokenDto } from 'src/auth/common/dto/token.dto';
 
 @Injectable()
 export class MatchPreferenceService {
   constructor(
-    @InjectModel(MatchPreference.name)
-    private readonly matchPreferenceModel: Model<MatchPreferenceDocument>,
-  ) {}
+    @InjectModel(MatchPreference.name) private readonly matchPreferenceModel: Model<MatchPreference>,
+  ) { }
 
-  async createMatchPreference(
-    createMatchPreferenceDto: CreateMatchPreferenceDto,
-  ): Promise<MatchPreference> {
-    const createdMatchPreference = new this.matchPreferenceModel(
-      createMatchPreferenceDto,
-    );
-    return await createdMatchPreference.save();
+  async createMatchPreference(createMatchPreferenceDto: CreateMatchPreferenceDto, user: TokenDto): Promise<MatchPreference> {
+    
+    let existingMatchPreference = await this.matchPreferenceModel.findOne({ userId: new Types.ObjectId(user._id) });
+
+    if (!existingMatchPreference) {
+      existingMatchPreference = new this.matchPreferenceModel(
+        {
+          ...createMatchPreferenceDto,
+          userId: new Types.ObjectId(user._id),
+        },
+      );
+
+    }
+    else {
+      existingMatchPreference = await this.matchPreferenceModel.findByIdAndUpdate(
+        existingMatchPreference._id,
+        createMatchPreferenceDto,
+        { new: true },
+      );
+    }
+    // Sauvegarder uniquement si c'est un nouveau document
+    if (existingMatchPreference.isNew) {
+      await existingMatchPreference.save();
+    }
+    return existingMatchPreference;
   }
+
+
   async getAllMatchPreferences(): Promise<MatchPreference[]> {
     return this.matchPreferenceModel.find().exec();
   }
 
   async getMatchPreferenceById(id: string): Promise<MatchPreference> {
-    return this.matchPreferenceModel.findById(id).exec();
+    console.log("Preference", id)
+    const objectId = new Types.ObjectId(id);
+    const preference = await this.matchPreferenceModel.findOne({ userId: objectId }).exec();
+    console.log("preference", preference)
+    if (!preference) {
+      throw new NotFoundException('Match preference not found');
+    }
+    return preference;
   }
 
   async updateMatchPreference(

@@ -21,10 +21,20 @@ import {
 } from './Conversation/schemas/conversation.schema';
 import { Message, MessageSchema } from './Conversation/schemas/message.schemas';
 import { JwtModule } from '@nestjs/jwt';
-
+import { ProfileSuggestion, ProfileSuggestionSchema } from './schemas/profileSuggestion.schema';
+import { ProfileSuggestionService } from './profileSuggestion.service';
+import { ProfileSuggestionController } from './controllers/profileSuggestion.controller';
+import { RecommendationService } from './recommendation.service';
+import { RecommendationController } from './controllers/recommendation.controller';
+import { GeolocationModule } from '../Profil/Geolocation/geolocation.module';
+import { Geolocation, GeolocationSchema } from '../Profil/Geolocation/schemas/geolocation.schema';
 @Module({
   imports: [
     JwtModule.register({}),
+    GeolocationModule,
+    MongooseModule.forFeature([
+      { name: Geolocation.name, schema: GeolocationSchema },
+    ]),
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema },
     ]),
@@ -37,12 +47,23 @@ import { JwtModule } from '@nestjs/jwt';
     MongooseModule.forFeature([
       { name: MatchPreference.name, schema: MatchPreferenceSchema },
     ]),
+    MongooseModule.forFeature([
+      { name: ProfileSuggestion.name, schema: ProfileSuggestionSchema },
+    ]),
   ],
   controllers: [
     InteractionController,
     MatchController,
     MatchPreferenceController,
+    ProfileSuggestionController,
+    RecommendationController,
   ],
-  providers: [InteractionService, MatchService, MatchPreferenceService],
+  providers: [
+    InteractionService, 
+    MatchService, 
+    MatchPreferenceService,
+    ProfileSuggestionService,
+    RecommendationService,
+  ],
 })
 export class MatchingModule {}

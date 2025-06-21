@@ -8,16 +8,20 @@ import { AccessTokenStrategy } from './auth-classique/strategies/accessToken.str
 import { RefreshTokenStrategy } from './auth-classique/strategies/refreshToken.strategy';
 import { UserModule } from '../Profil/User/user.module';
 import { User, UserSchema } from '../Profil/User/schemas/user.schema';
-import { GoogleStrategy } from './auth-classique/strategies/google-Oauth.strategy';
+// import { GoogleStrategy } from './auth-classique/strategies/google-Oauth.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { MailService } from './auth-classique/services/mail.service';
-import { AuthsocialMediaController } from './authsocial-media/authsocial-media.controller';
-import { AuthsocialMediaService } from './authsocial-media/services/authsocial-media.service';
+// import { AuthsocialMediaController } from './authsocial-media/authsocial-media.controller';
+// import { AuthsocialMediaService } from './authsocial-media/services/authsocial-media.service';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'google' }),
-    JwtModule.register({}),
+    // PassportModule.register({ defaultStrategy: 'google' }),
+    PassportModule.register({}),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
     MongooseModule.forFeature([
       { name: Auth.name, schema: AuthSchema },
       { name: User.name, schema: UserSchema },
@@ -25,13 +29,15 @@ import { AuthsocialMediaService } from './authsocial-media/services/authsocial-m
 
     UserModule,
   ],
-  controllers: [AuthController, AuthsocialMediaController],
+  controllers: [AuthController,
+    // AuthsocialMediaController
+  ],
   providers: [
-    AuthsocialMediaService,
+    // AuthsocialMediaService,
     AuthService,
-    AccessTokenStrategy,
-    RefreshTokenStrategy,
-    GoogleStrategy,
+    // AccessTokenStrategy,
+    // RefreshTokenStrategy,
+    // GoogleStrategy,
     MailService,
   ],
 })

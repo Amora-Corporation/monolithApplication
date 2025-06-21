@@ -18,6 +18,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiSecurity,
+  ApiBearerAuth,
 } from '@nestjs/swagger'; // Ajout de Swagger
 import { AuthGuard } from './guards/auth.guard';
 import { Public } from '../common/decorators/public.decorator';
@@ -27,9 +28,11 @@ import { AuthService } from './services/auth.service';
 import { ForgotPasswordDto } from '../common/dto/forgot-password.dto';
 import { RefreshTokenRoute } from '../common/decorators/refreshToken.decorator';
 import { JwtService } from '@nestjs/jwt';
+import { CurrentUser } from '../common/decorators/currentUser.decorator';
 
 @Controller('auth-classique')
 @ApiTags('Auth Classique')
+
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -40,6 +43,7 @@ export class AuthController {
 
   @Post('SignInOrUp')
   @ApiOperation({ summary: 'Sign in or sign up a user' })
+  @Public()
   @ApiBody({ type: InscriptionDto }) // Utilisez InscriptionDto car il est partagé pour les deux cas
   @ApiResponse({
     status: 200,
@@ -48,43 +52,35 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid credentials' }) // Ajoutez d'autres réponses possibles
   @ApiResponse({ status: 500, description: 'Internal server error' }) // Erreur serveur
   async signInOrUp(@Body() insCoDto: InscriptionDto): Promise<any> {
+    
     return this.authService.signInOrUp(insCoDto);
   }
 
-  @Post('SignUp')
-  @ApiOperation({ summary: 'Sign up a new user' })
-  @ApiBody({ type: InscriptionDto })
-  @ApiResponse({ status: 201, description: 'User successfully registered' })
-  signUp(@Body() inscriptionDto: InscriptionDto) {
-    return this.authService.signUp(inscriptionDto);
-  }
-
-  @Post('SignIn')
-  @ApiOperation({ summary: 'Sign in an existing user' })
-  @ApiBody({ type: ConnexionDto })
-  @ApiResponse({ status: 200, description: 'User successfully signed in' })
-  signIn(@Body() connexionDto: ConnexionDto) {
-    return this.authService.signIn(connexionDto);
-  }
-
-  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Admin()
+  @UseGuards(AuthGuard)
   @Get()
   @ApiOperation({ summary: 'Retrieve all Auth User (Admin only)' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
-  findAll() {
+  findAll (@CurrentUser() user: any) {
     return this.authService.findAll();
   }
 
-  @UseGuards(AuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a user by ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(id);
+  @Admin()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  findOne(@Param('id') id: string, @CurrentUser() user: {_id: string, email: string, roles: string[]}) {
+    if (user.roles.includes('admin')) {
+      return this.authService.findOne(id);
+    } else {
+      throw new UnauthorizedException('Vous n\'avez pas les droits pour accéder à cette ressource');
+    }
   }
 
-  @UseGuards(AuthGuard)
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a user by ID' })
   @ApiBody({ type: UpdateAuthDto })

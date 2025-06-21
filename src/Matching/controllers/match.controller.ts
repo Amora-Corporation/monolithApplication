@@ -22,6 +22,9 @@ import {
 import { CreateMatchDto } from '../dtos/match.create';
 import { UpdateMatchDto } from '../dtos/match.update';
 import { AuthGuard } from 'src/auth/auth-classique/guards/auth.guard';
+import { Admin } from 'src/auth/common/decorators/isAdmin.decorator';
+import { CurrentUser } from 'src/auth/common/decorators/currentUser.decorator';
+import { TokenDto } from 'src/auth/common/dto/token.dto';
 
 @ApiTags('matching')
 @Controller('matching')
@@ -31,10 +34,18 @@ export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
   @Get()
+  @Admin()
   @ApiOperation({ summary: 'Get all matches' })
   @ApiResponse({ status: 200, type: [Match] })
   async getAllMatches(): Promise<Match[]> {
     return this.matchService.getAllMatch();
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get all matches for the current user' })
+  @ApiResponse({ status: 200, type: [Match] })
+  async getAllMatchesForCurrentUser(@CurrentUser() user: TokenDto): Promise<Match[]> {
+    return this.matchService.getAllMatchForCurrentUser(user); 
   }
 
   @Get(':id')

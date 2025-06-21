@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 import {
   IsString,
   IsNumber,
@@ -17,12 +16,6 @@ import {
 import { Types } from 'mongoose';
 
 export class CreateUserDto {
-  @ApiProperty({ example: '', description: 'ID' })
-  @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  _id: Types.ObjectId;
-
   @ApiProperty({ example: 'John', description: "Le prénom de l'utilisateur" })
   @IsString()
   @MinLength(2)
@@ -38,10 +31,13 @@ export class CreateUserDto {
   @MaxLength(50)
   last_name: string;
 
-  @ApiProperty({ example: 1, description: "ID du genre de l'utilisateur" })
-  @IsNumber()
-  gender_ID: number;
-
+  @ApiProperty({ 
+    example: '507f1f77bcf86cd799439011', 
+    description: "ID du genre de l'utilisateur" 
+  })
+  @IsString()
+  gender_ID: Types.ObjectId;
+  
   @ApiProperty({
     example: 'johndoe',
     description: "Le pseudonyme de l'utilisateur",
@@ -50,13 +46,6 @@ export class CreateUserDto {
   @MinLength(3)
   @MaxLength(30)
   nickname: string;
-
-  @ApiProperty({
-    example: 'john.doe@example.com',
-    description: "L'adresse email de l'utilisateur",
-  })
-  @IsEmail()
-  email: string;
 
   // @ApiProperty({
   //   example: 'password123',
@@ -198,12 +187,12 @@ export class CreateUserDto {
   religion: string;
 
   @ApiPropertyOptional({
-    example: [1, 2],
+    example: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012'],
     description: "Les genres qui intéressent l'utilisateur",
   })
   @IsArray()
   @IsOptional()
-  interested_genre: number[];
+  interested_genre: Types.ObjectId[];
 
   @ApiPropertyOptional({
     example: true,
@@ -229,21 +218,21 @@ export class CreateUserDto {
   @IsOptional()
   looking_for: string;
 
-  @ApiPropertyOptional({
-    example: 'Gemini',
-    description: "Le signe astrologique de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  zodiac_sign: string;
+  // @ApiPropertyOptional({
+  //   example: 'Gemini',
+  //   description: "Le signe astrologique de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // zodiac_sign: string;
 
-  @ApiPropertyOptional({
-    example: 'INTJ',
-    description: "Le type de personnalité de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  personality_type: string;
+  // @ApiPropertyOptional({
+  //   example: 'INTJ',
+  //   description: "Le type de personnalité de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // personality_type: string;
 
   @ApiPropertyOptional({
     example: false,
@@ -269,21 +258,21 @@ export class CreateUserDto {
   @IsOptional()
   children: string;
 
-  @ApiPropertyOptional({
-    example: ['Dog', 'Cat'],
-    description: "Les animaux de compagnie de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  pets: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Dog', 'Cat'],
+  //   description: "Les animaux de compagnie de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // pets: string[];
 
-  @ApiPropertyOptional({
-    example: true,
-    description: "Si les photos de l'utilisateur sont vérifiées",
-  })
-  @IsBoolean()
-  @IsOptional()
-  verified_photos: boolean;
+  // @ApiPropertyOptional({
+  //   example: true,
+  //   description: "Si les photos de l'utilisateur sont vérifiées",
+  // })
+  // @IsBoolean()
+  // @IsOptional()
+  // verified_photos: boolean;
 
   @ApiPropertyOptional({
     example: { instagram: 'johndoe', linkedin: 'john-doe' },
@@ -293,107 +282,100 @@ export class CreateUserDto {
   @IsOptional()
   social_media_links: { [key: string]: string };
 
-  @ApiPropertyOptional({
-    example: ['Texting', 'Phone calls'],
-    description: "Les styles de communication préférés de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  preferred_communication_style: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Texting', 'Phone calls'],
+  //   description: "Les styles de communication préférés de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // preferred_communication_style: string[];
 
-  @ApiPropertyOptional({
-    example: ['Smoking', 'Dishonesty'],
-    description: "Les deal-breakers de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  deal_breakers: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Smoking', 'Dishonesty'],
+  //   description: "Les deal-breakers de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // deal_breakers: string[];
 
-  @ApiPropertyOptional({
-    example: 'Fully vaccinated',
-    description: "Le statut de vaccination de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  vaccination_status: string;
+  // @ApiPropertyOptional({
+  //   example: 'Fully vaccinated',
+  //   description: "Le statut de vaccination de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // vaccination_status: string;
 
-  @ApiPropertyOptional({
-    example: 'Moderate',
-    description: "Les opinions politiques de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  political_views: string;
+  // @ApiPropertyOptional({
+  //   example: 'Moderate',
+  //   description: "Les opinions politiques de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // political_views: string;
 
-  @ApiPropertyOptional({
-    example: ['Rock', 'Jazz'],
-    description: "Les genres musicaux préférés de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  favorite_music: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Rock', 'Jazz'],
+  //   description: "Les genres musicaux préférés de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // favorite_music: string[];
 
-  @ApiPropertyOptional({
-    example: ['Inception', 'The Godfather'],
-    description: "Les films préférés de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  favorite_movies: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Inception', 'The Godfather'],
+  //   description: "Les films préférés de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // favorite_movies: string[];
 
-  @ApiPropertyOptional({
-    example: ['Breaking Bad', 'Game of Thrones'],
-    description: "Les séries TV préférées de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  favorite_tv_shows: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Breaking Bad', 'Game of Thrones'],
+  //   description: "Les séries TV préférées de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // favorite_tv_shows: string[];
 
-  @ApiPropertyOptional({
-    example: 'Once a year',
-    description: "La fréquence de voyage de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  travel_frequency: string;
+  // @ApiPropertyOptional({
+  //   example: 'Once a year',
+  //   description: "La fréquence de voyage de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // travel_frequency: string;
 
-  @ApiPropertyOptional({
-    example: 'Work hard, play hard',
-    description: "L'équilibre travail-vie personnelle de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  work_life_balance: string;
+  // @ApiPropertyOptional({
+  //   example: 'Work hard, play hard',
+  //   description: "L'équilibre travail-vie personnelle de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // work_life_balance: string;
 
-  @ApiPropertyOptional({
-    example: '3 times a week',
-    description: "La fréquence d'exercice de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  exercise_frequency: string;
+  // @ApiPropertyOptional({
+  //   example: '3 times a week',
+  //   description: "La fréquence d'exercice de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // exercise_frequency: string;
 
-  @ApiPropertyOptional({
-    example: ['Vegetarian', 'Gluten-free'],
-    description: "Les préférences alimentaires de l'utilisateur",
-  })
-  @IsArray()
-  @IsOptional()
-  dietary_preferences: string[];
+  // @ApiPropertyOptional({
+  //   example: ['Vegetarian', 'Gluten-free'],
+  //   description: "Les préférences alimentaires de l'utilisateur",
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // dietary_preferences: string[];
 
-  @ApiPropertyOptional({
-    example: 'Bali',
-    description: "La destination de vacances de rêve de l'utilisateur",
-  })
-  @IsString()
-  @IsOptional()
-  dream_vacation: string;
+  // @ApiPropertyOptional({
+  //   example: 'Bali',
+  //   description: "La destination de vacances de rêve de l'utilisateur",
+  // })
+  // @IsString()
+  // @IsOptional()
+  // dream_vacation: string;
 
-  @ApiPropertyOptional({
-    example: 'Bali',
-    description: "La destination de vacances de rêve de l'utilisateur",
-  })
-  @IsBoolean()
-  @IsOptional()
-  empty_account: boolean;
 }
