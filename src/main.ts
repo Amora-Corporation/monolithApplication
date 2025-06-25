@@ -62,7 +62,7 @@ async function bootstrap() {
   });
 
   fs.writeFileSync('./swagger-spec.json', JSON.stringify(document));
-  await app.listen(3002);
+  await app.listen(3000);
   console.log(
     `Swagger documentation is available at http://localhost:3002/api`,
   );
