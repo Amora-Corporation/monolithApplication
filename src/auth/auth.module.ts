@@ -11,8 +11,8 @@ import { User, UserSchema } from '../Profil/User/schemas/user.schema';
 // import { GoogleStrategy } from './auth-classique/strategies/google-Oauth.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { MailService } from './auth-classique/services/mail.service';
-import { AuthsocialMediaController } from './authsocial-media/authsocial-media.controller';
-import { AuthsocialMediaService } from './authsocial-media/services/authsocial-media.service';
+// import { AuthsocialMediaController } from './authsocial-media/authsocial-media.controller';
+// import { AuthsocialMediaService } from './authsocial-media/services/authsocial-media.service';
 
 @Module({
   imports: [
@@ -30,10 +30,10 @@ import { AuthsocialMediaService } from './authsocial-media/services/authsocial-m
     UserModule,
   ],
   controllers: [AuthController,
-    AuthsocialMediaController
+    // AuthsocialMediaController
   ],
   providers: [
-    AuthsocialMediaService,
+    // AuthsocialMediaService,
     AuthService,
     // AccessTokenStrategy,
     // RefreshTokenStrategy,
